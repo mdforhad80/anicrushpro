@@ -17,7 +17,7 @@
         }
         *{margin:0;padding:0;box-sizing:border-box;}
         html{scroll-behavior:smooth;}
-        body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden;}
+        body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden;word-break:break-word;}
         ::-webkit-scrollbar{width:8px;height:8px;} ::-webkit-scrollbar-track{background:var(--surface);} ::-webkit-scrollbar-thumb{background:var(--primary);border-radius:4px;}
 
         .container{max-width:1200px;margin:0 auto;padding:0 5%;}
@@ -65,15 +65,17 @@
         .banner-bg{position:absolute;top:0;left:0;right:0;height:100%;background-size:cover;background-position:center 20%;filter:brightness(0.25) saturate(1.1);}
         .banner-gradient{position:absolute;inset:0;background:linear-gradient(to bottom,var(--bg) 0%,rgba(5,5,5,0.7) 40%,var(--bg) 100%);}
         .banner-content{position:relative;z-index:2;display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:end;padding:40px 0;}
-        .poster{position:relative;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);aspect-ratio:3/4;background:var(--card);}
+        .poster{position:relative;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);aspect-ratio:3/4;background:var(--card);max-width:100%;}
         .poster img{width:100%;height:100%;object-fit:cover;}
         .poster-badge{position:absolute;top:10px;left:10px;background:var(--primary);color:#fff;font-size:0.75rem;font-weight:700;padding:6px 12px;border-radius:8px;box-shadow:var(--glow);}
-        .banner-info h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;margin-bottom:16px;line-height:1.2;}
+        .banner-info h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;margin-bottom:16px;line-height:1.2;word-break:break-word;}
         .banner-meta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
         .meta-tag{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);padding:6px 14px;border-radius:8px;font-size:0.85rem;color:var(--text-secondary);}
         .meta-tag .dot{width:6px;height:6px;border-radius:50%;background:var(--primary);}
         .banner-synopsis{color:var(--text-secondary);line-height:1.7;max-width:700px;margin-bottom:24px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
-        .banner-actions{display:flex;gap:12px;flex-wrap:wrap;}
+        
+        /* FIXED: Action Buttons */
+        .action-buttons{display:flex;gap:14px;flex-wrap:wrap;}
         .btn{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:12px;font-size:0.95rem;font-weight:600;text-decoration:none;transition:var(--transition);cursor:pointer;border:none;}
         .btn-primary{background:var(--primary);color:#fff;box-shadow:var(--glow);}
         .btn-primary:hover{background:var(--accent);transform:translateY(-2px);}
@@ -97,14 +99,15 @@
         .genre-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
         .genre-tag{background:rgba(168,85,247,0.15);color:var(--primary-light);padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;border:1px solid rgba(168,85,247,0.2);}
 
-        /* Trailer */
-        .trailer-wrapper{position:relative;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;background:var(--card);box-shadow:var(--shadow);}
-        .trailer-wrapper iframe{width:100%;height:100%;border:none;}
+        /* FIXED: Trailer Container */
+        .trailer-container{position:relative;width:100%;padding-top:56.25%;border-radius:var(--radius);overflow:hidden;background:var(--card);box-shadow:var(--shadow);}
+        .trailer-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;}
 
-        /* Episode List */
-        .episode-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;}
+        /* FIXED: Episode Grid */
+        .episodes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:14px;}
         .episode-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);text-decoration:none;color:var(--text);transition:var(--transition);}
         .episode-btn:hover{background:var(--primary);border-color:var(--primary);color:#fff;transform:translateY(-3px);box-shadow:var(--glow);}
+        .episode-btn.active{background:rgba(168,85,247,0.15);border-color:var(--primary);color:var(--primary-light);}
         .ep-num{font-size:1.1rem;font-weight:700;}
         .ep-label{font-size:0.7rem;color:var(--text-secondary);}
 
@@ -150,6 +153,9 @@
         .back-to-top.visible{opacity:1;visibility:visible;}
         .back-to-top:hover{transform:translateY(-4px);background:var(--accent);}
 
+        /* =========================================
+           RESPONSIVE FIXES
+           ========================================= */
         @media (max-width:1024px){
             .content-grid{grid-template-columns:1fr;}
             .sidebar{order:-1;}
@@ -158,9 +164,19 @@
         @media (max-width:768px){
             .banner-content{grid-template-columns:1fr;text-align:center;}
             .poster{max-width:200px;margin:0 auto;}
+            .action-buttons{justify-content:center;align-items:center;}
+            .action-buttons .btn{min-width:140px;justify-content:center;}
+            .banner-meta{justify-content:center;}
+            .banner-synopsis{margin-left:auto;margin-right:auto;}
             .footer-content{grid-template-columns:1fr;gap:40px;}
             .footer-links{grid-template-columns:1fr 1fr;}
-            .episode-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));}
+            .episodes-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px;}
+            .char-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));}
+        }
+        @media (max-width:480px){
+            .action-buttons .btn{width:100%;min-width:auto;}
+            .episodes-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;}
+            .rec-card{width:140px;}
         }
     </style>
 </head>
@@ -214,7 +230,7 @@
                 <h1 id="animeTitle">Loading...</h1>
                 <div class="banner-meta" id="bannerMeta"></div>
                 <p class="banner-synopsis" id="animeSynopsis"></p>
-                <div class="banner-actions">
+                <div class="action-buttons" id="actionButtons">
                     <a href="#" class="btn btn-primary" id="watchBtn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                         Watch Now
@@ -234,13 +250,13 @@
             <!-- Trailer -->
             <div id="trailerSection" style="display:none">
                 <h2 class="section-title">Trailer</h2>
-                <div class="trailer-wrapper" id="trailerWrap"></div>
+                <div class="trailer-container" id="trailerWrap"></div>
             </div>
 
             <!-- Episodes -->
             <div>
                 <h2 class="section-title">Episodes</h2>
-                <div class="episode-grid" id="episodeList">
+                <div class="episodes-grid" id="episodeList">
                     <div class="skeleton" style="height:80px;border-radius:var(--radius-sm)"></div>
                     <div class="skeleton" style="height:80px;border-radius:var(--radius-sm)"></div>
                     <div class="skeleton" style="height:80px;border-radius:var(--radius-sm)"></div>
@@ -248,7 +264,7 @@
             </div>
 
             <!-- Characters -->
-            <div>
+            <div id="charactersContainer">
                 <h2 class="section-title">Characters & Voice Actors</h2>
                 <div class="char-grid" id="charGrid">
                     <div class="skeleton" style="height:200px;border-radius:var(--radius)"></div>
@@ -259,7 +275,7 @@
             </div>
 
             <!-- Recommendations -->
-            <div>
+            <div id="recommendedContainer">
                 <h2 class="section-title">Recommended For You</h2>
                 <div class="rec-row" id="recRow">
                     <div class="skeleton" style="width:160px;height:240px;border-radius:var(--radius-sm);flex-shrink:0"></div>
@@ -369,22 +385,19 @@
         });
         $('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') window.location.href=`search.html?q=${encodeURIComponent(e.target.value)}`; });
 
-        /* Load Anime Details */
+        /* FIXED: Load Anime Details with allSettled */
         async function loadAnime() {
             const id = getParam('id');
             if(!id){$('animeTitle').textContent='Anime Not Found';return;}
 
             try {
-                const [animeRes, charRes, recRes, relRes] = await Promise.all([
-                    fetch(`${API_BASE}/anime/${id}`),
-                    fetch(`${API_BASE}/anime/${id}/characters`),
-                    fetch(`${API_BASE}/anime/${id}/recommendations`),
-                    fetch(`${API_BASE}/anime/${id}/relations`)
-                ]);
-                const anime = (await animeRes.json()).data;
-                const chars = (await charRes.json()).data || [];
-                const recs = (await recRes.json()).data || [];
-                const rels = (await relRes.json()).data || [];
+                // Main anime info
+                const animeRes = await fetch(`${API_BASE}/anime/${id}`);
+                if(!animeRes.ok) throw new Error(`HTTP ${animeRes.status}`);
+                const animeData = await animeRes.json();
+                const anime = animeData.data;
+
+                if(!anime) throw new Error('No anime data received');
 
                 document.title = `${anime.title} | Zenith Anime`;
 
@@ -452,29 +465,47 @@
                     </div>
                 `;
 
-                // Characters
-                const charGrid = $('charGrid');
-                charGrid.innerHTML = chars.slice(0,12).map(c => `
-                    <div class="char-card">
-                        <img class="char-img" src="${c.character?.images?.jpg?.image_url||''}" alt="${escapeHtml(c.character?.name||'')}" loading="lazy" onerror="this.style.display='none';this.parentElement.style.background='var(--card-hover)'">
-                        <div class="char-info">
-                            <div class="char-name">${escapeHtml(c.character?.name||'')}</div>
-                            <div class="char-role">${c.role||''}</div>
+                // FIXED: Use allSettled for independent sections
+                const [charResult, recResult, relResult] = await Promise.allSettled([
+                    fetch(`${API_BASE}/anime/${id}/characters`).then(r => r.ok ? r.json() : Promise.reject('chars')),
+                    fetch(`${API_BASE}/anime/${id}/recommendations`).then(r => r.ok ? r.json() : Promise.reject('recs')),
+                    fetch(`${API_BASE}/anime/${id}/relations`).then(r => r.ok ? r.json() : Promise.reject('rels'))
+                ]);
+
+                // Characters - independent rendering
+                if(charResult.status === 'fulfilled' && charResult.value?.data) {
+                    const chars = charResult.value.data;
+                    const charGrid = $('charGrid');
+                    charGrid.innerHTML = chars.slice(0,12).map(c => `
+                        <div class="char-card">
+                            <img class="char-img" src="${c.character?.images?.jpg?.image_url||''}" alt="${escapeHtml(c.character?.name||'')}" loading="lazy" onerror="this.style.display='none';this.parentElement.style.background='var(--card-hover)'">
+                            <div class="char-info">
+                                <div class="char-name">${escapeHtml(c.character?.name||'')}</div>
+                                <div class="char-role">${c.role||''}</div>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `).join('');
+                } else {
+                    $('charGrid').innerHTML = '<p style="color:var(--text-secondary);padding:20px;">Could not load characters.</p>';
+                }
 
-                // Recommendations
-                const recRow = $('recRow');
-                recRow.innerHTML = recs.slice(0,12).map(r => `
-                    <div class="rec-card" onclick="location.href='anime.html?id=${r.entry?.mal_id}'">
-                        <div class="rec-img"><img src="${r.entry?.images?.jpg?.image_url||''}" alt="${escapeHtml(r.entry?.title||'')}" loading="lazy" onerror="this.style.display='none'"></div>
-                        <div class="rec-title">${escapeHtml(r.entry?.title||'')}</div>
-                    </div>
-                `).join('');
+                // Recommendations - independent rendering
+                if(recResult.status === 'fulfilled' && recResult.value?.data) {
+                    const recs = recResult.value.data;
+                    const recRow = $('recRow');
+                    recRow.innerHTML = recs.slice(0,12).map(r => `
+                        <div class="rec-card" onclick="location.href='anime.html?id=${r.entry?.mal_id}'">
+                            <div class="rec-img"><img src="${r.entry?.images?.jpg?.image_url||''}" alt="${escapeHtml(r.entry?.title||'')}" loading="lazy" onerror="this.style.display='none'"></div>
+                            <div class="rec-title">${escapeHtml(r.entry?.title||'')}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    $('recRow').innerHTML = '<p style="color:var(--text-secondary);padding:20px;">No recommendations available.</p>';
+                }
 
-                // Relations
-                if(rels.length){
+                // Relations - independent rendering
+                if(relResult.status === 'fulfilled' && relResult.value?.data?.length) {
+                    const rels = relResult.value.data;
                     $('relationsSection').style.display='block';
                     $('relationList').innerHTML = rels.slice(0,6).flatMap(r => 
                         (r.entry||[]).map(e => `
@@ -491,6 +522,7 @@
 
             } catch(e) {
                 $('animeTitle').textContent = 'Error Loading Anime';
+                $('animeSynopsis').textContent = e.message || 'Failed to load anime details. Please try again later.';
                 console.error(e);
             }
         }
