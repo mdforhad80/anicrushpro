@@ -1,76 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AnimeStream – Creator</title>
-    <style>
-        /* Global styles (same header, sidebar, search overlay) */
-        :root { /* ... same variables ... */ }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background: var(--bg); color: var(--text); font-family: var(--font); }
-        .creator-page { padding: clamp(20px,5vw,40px); max-width:800px; margin:0 auto; }
-        .profile-card { background: var(--bg2); border:1px solid var(--border); border-radius: var(--radius-lg); padding: 30px; text-align:center; margin-bottom: 30px; }
-        .profile-card img { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px; border: 3px solid var(--accent); }
-        .profile-card h1 { font-size: 2rem; margin-bottom: 8px; }
-        .profile-card .badge { display: inline-block; background: var(--accent); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin: 4px; }
-        .social-links { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
-        .social-links a { width: 40px; height: 40px; border-radius: 50%; background: var(--bg3); display: flex; align-items: center; justify-content: center; transition: var(--transition); font-size: 1.2rem; }
-        .social-links a:hover { background: var(--accent); color: #fff; }
-        .section-block { background: var(--bg2); border:1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
-        .section-block h2 { font-size: 1.3rem; margin-bottom: 12px; color: var(--accent2); }
-        .section-block p, .section-block li { font-size: 0.9rem; color: var(--text2); line-height: 1.6; }
-        .section-block code { background: #222; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
-        /* ... sidebar, search overlay styles ... */
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creator — AnimeStream</title>
+  <meta name="description" content="About the developer and deployment guides.">
+  <style>
+    :root {
+      --bg: #050505; --bg-elevated: #0f0f0f; --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.08); --border: rgba(255,255,255,0.06);
+      --text: #f0f0f0; --text-secondary: #888; --accent: #a855f7; --accent-light: #c084fc;
+      --accent-glow: rgba(168,85,247,0.35); --radius: 16px; --radius-sm: 8px;
+      --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height:1.5; }
+    a { color:inherit; text-decoration:none; }
+    img { max-width:100%; display:block; }
+
+    /* Header */
+    .header { position:sticky; top:0; z-index:100; height:70px; background: rgba(5,5,5,0.85); backdrop-filter: blur(20px); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 4vw; }
+    .logo { font-size:1.6rem; font-weight:800; background: linear-gradient(135deg, var(--accent), var(--accent-light)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .nav-right { display:flex; gap:16px; align-items:center; }
+    .icon-btn { width:40px; height:40px; border-radius:50%; background: var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text); transition:var(--transition); }
+    .icon-btn:hover { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+
+    /* Sidebar */
+    .sidebar { position:fixed; top:0; left:-300px; width:300px; height:100vh; background: var(--bg-elevated); z-index:200; border-right:1px solid var(--border); transition: left 0.35s ease; padding:28px 20px; }
+    .sidebar.open { left:0; }
+    .sidebar-overlay { position:fixed; inset:0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); z-index:199; opacity:0; pointer-events:none; transition: opacity 0.35s; }
+    .sidebar-overlay.open { opacity:1; pointer-events:all; }
+    .sidebar-title { font-size:1.2rem; font-weight:700; margin-bottom:20px; color:var(--accent-light); }
+    .sidebar-link { display:block; padding:12px 14px; border-radius: var(--radius-sm); margin-bottom:6px; font-weight:500; transition:var(--transition); }
+    .sidebar-link:hover { background: var(--surface); color: var(--accent-light); }
+
+    /* Profile Hero */
+    .profile-hero { padding: 60px 4vw 40px; text-align:center; max-width:700px; margin:0 auto; }
+    .avatar {
+      width:120px; height:120px; border-radius:50%; margin:0 auto 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      display:flex; align-items:center; justify-content:center; font-size:3rem; font-weight:800; color:#fff;
+      box-shadow: 0 10px 40px var(--accent-glow); border:3px solid var(--border);
+    }
+    .profile-name { font-size:2rem; font-weight:800; margin-bottom:8px; }
+    .profile-role { color: var(--accent-light); font-weight:600; margin-bottom:16px; }
+    .profile-bio { color: var(--text-secondary); line-height:1.7; max-width:560px; margin:0 auto 24px; }
+    .socials { display:flex; gap:12px; justify-content:center; margin-bottom:30px; }
+    .social-btn {
+      width:44px; height:44px; border-radius:50%; background: var(--surface); border:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center; color:var(--text); transition:var(--transition);
+    }
+    .social-btn:hover { background: var(--accent); border-color: var(--accent); color:#fff; transform: translateY(-3px); }
+
+    /* Features */
+    .features { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:20px; max-width:1100px; margin:0 auto; padding: 0 4vw 40px; }
+    .feature-card {
+      background: var(--surface); border:1px solid var(--border); border-radius: var(--radius);
+      padding:24px; transition: var(--transition);
+    }
+    .feature-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 30px rgba(168,85,247,0.12); }
+    .feature-icon { font-size:1.8rem; margin-bottom:12px; }
+    .feature-title { font-size:1.05rem; font-weight:700; margin-bottom:8px; }
+    .feature-desc { font-size:0.9rem; color: var(--text-secondary); line-height:1.6; }
+
+    /* Guides */
+    .guides { max-width:1100px; margin:0 auto; padding: 0 4vw 40px; }
+    .guide-card {
+      background: var(--surface); border:1px solid var(--border); border-radius: var(--radius);
+      padding:24px; margin-bottom:16px;
+    }
+    .guide-title { font-size:1.1rem; font-weight:700; margin-bottom:12px; color: var(--accent-light); }
+    .guide-step { font-size:0.9rem; color: var(--text-secondary); margin-bottom:8px; line-height:1.6; padding-left:16px; position:relative; }
+    .guide-step::before { content:'•'; position:absolute; left:0; color: var(--accent); font-weight:700; }
+
+    /* Contact */
+    .contact { max-width:600px; margin:0 auto; padding: 0 4vw 60px; }
+    .contact-input {
+      width:100%; padding:12px 14px; margin-bottom:12px; background: var(--bg-elevated);
+      border:1px solid var(--border); border-radius: var(--radius-sm); color:var(--text); outline:none;
+      transition: var(--transition);
+    }
+    .contact-input:focus { border-color: var(--accent); }
+    .contact-btn {
+      width:100%; padding:14px; border-radius: var(--radius-sm); background: var(--accent); color:#fff;
+      font-weight:700; border:none; cursor:pointer; transition: var(--transition); font-size:1rem;
+    }
+    .contact-btn:hover { box-shadow: 0 4px 20px var(--accent-glow); transform: translateY(-2px); }
+
+    /* Footer */
+    .footer { border-top:1px solid var(--border); padding: 50px 4vw 30px; background: var(--bg-elevated); margin-top:20px; }
+    .footer-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; color: var(--text-secondary); font-size:0.82rem; }
+  </style>
 </head>
 <body>
-    <header class="header" id="header"> ... </header>
-    <!-- Sidebar & search overlay same as before -->
 
-    <main class="creator-page">
-        <div class="profile-card">
-            <img src="https://avatars.githubusercontent.com/u/9919?s=200&v=4" alt="Creator Avatar">
-            <h1>AnimeStream Dev</h1>
-            <p>Full‑Stack Developer & Anime Enthusiast</p>
-            <div><span class="badge">HTML</span><span class="badge">CSS</span><span class="badge">JS</span><span class="badge">Jikan API</span></div>
-            <div class="social-links">
-                <a href="#" title="GitHub">🐙</a>
-                <a href="#" title="Twitter">🐦</a>
-                <a href="#" title="Discord">💬</a>
-            </div>
-        </div>
+  <!-- Header -->
+  <header class="header">
+    <button class="icon-btn" id="menuBtn" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+    <a href="index.html" class="logo">AnimeStream</a>
+    <div class="nav-right">
+      <a href="index.html" class="icon-btn" aria-label="Home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      </a>
+    </div>
+  </header>
 
-        <div class="section-block">
-            <h2>✨ About This Project</h2>
-            <p>A premium, Netflix‑quality anime streaming front‑end built entirely with vanilla HTML, CSS, and JavaScript. All data is fetched dynamically from the Jikan API.</p>
-            <ul style="margin-top:10px;">
-                <li>Responsive design (mobile, tablet, desktop)</li>
-                <li>Cinematic hero slider, trending widgets, search, schedule</li>
-                <li>Cache & rate‑limit management</li>
-                <li>Deployable on GitHub Pages or Cloudflare Pages</li>
-            </ul>
-        </div>
+  <!-- Sidebar -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-title">Menu</div>
+    <a href="index.html" class="sidebar-link">🏠 Home</a>
+    <a href="search.html" class="sidebar-link">🔍 Search</a>
+    <a href="schedule.html" class="sidebar-link">📅 Schedule</a>
+  </nav>
 
-        <div class="section-block" id="deploy">
-            <h2>🚀 Deployment Guide</h2>
-            <p><strong>GitHub Pages:</strong></p>
-            <ol>
-                <li>Push all HTML files to a repository.</li>
-                <li>Go to Settings → Pages → Source: main branch.</li>
-                <li>Your site will be live at <code>https://yourusername.github.io/repo</code>.</li>
-            </ol>
-            <p style="margin-top:10px;"><strong>Cloudflare Pages:</strong></p>
-            <ol>
-                <li>Connect your GitHub repo to Cloudflare Pages.</li>
-                <li>Set build command: (none) and output directory: /.</li>
-                <li>Deploy.</li>
-            </ol>
-        </div>
-    </main>
-    <script>
-        // Include UI logic (sidebar, search overlay) as in previous pages.
-        // No API calls needed for this page.
-    </script>
+  <!-- Profile -->
+  <div class="profile-hero">
+    <div class="avatar">A</div>
+    <h1 class="profile-name">AnimeStream Developer</h1>
+    <div class="profile-role">Frontend Engineer & UI Designer</div>
+    <p class="profile-bio">
+      Building premium, cinematic web experiences with vanilla HTML, CSS, and JavaScript.
+      This project demonstrates a complete anime streaming UI powered by the Jikan API.
+    </p>
+    <div class="socials">
+      <a href="#" class="social-btn" aria-label="GitHub">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.17 0 0 1-.32 3.3 1.23a11.5 11.5 0 016 0c2.28-1.55 3.29-1.23 3.29-1.23.66 1.65.24 2.87.12 3.17.77.84 1.24 1.91 1.24 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.22.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+      <a href="#" class="social-btn" aria-label="Twitter">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.44 4.83c-.8.37-1.5.38-2.22.02.93-.56.96-.96 1.2-1.68-.89.53-1.86.9-2.9 1.1-.82-.88-2-1.43-3.3-1.43-2.5 0-4.55 2.04-4.55 4.54 0 .36.04.7.12 1.03-3.77-.19-7.2-1.99-9.46-4.73-.4.68-.62 1.46-.62 2.3 0 1.56.8 2.95 2 3.77-.71-.02-1.37-.22-1.95-.54v.06c0 2.2 1.56 4.03 3.64 4.44-.38.1-.78.16-1.2.16-.3 0-.58-.03-.86-.08.58 1.8 2.26 3.12 4.25 3.16-1.56 1.22-3.54 1.94-5.68 1.94-.37 0-.73-.02-1.08-.06 2.01 1.3 4.4 2.05 6.97 2.05 8.36 0 12.93-6.92 12.93-12.93 0-.2 0-.4-.02-.6.9-.64 1.66-1.45 2.27-2.37z"/></svg>
+      </a>
+      <a href="#" class="social-btn" aria-label="Discord">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.32 4.37A19.8 19.8 0 0015.37 2a14.3 14.3 0 00-.64 1.32 18.3 18.3 0 00-5.5 0A14.3 14.3 0 008.6 2a19.8 19.8 0 00-4.95 2.37A20.5 20.5 0 00.1 18.1a19.9 19.9 0 006.1 3.1 15 15 0 001.3-2.1 12.7 12.7 0 01-2-1c.17-.12.33-.25.48-.38a14.4 14.4 0 0012.2 0c.16.13.32.26.49.38-.64.38-1.3.72-2 1a15 15 0 001.3 2.1 19.9 19.9 0 006.1-3.1 20.5 20.5 0 00-3.78-13.73zM8.52 15.5c-1.2 0-2.2-1.1-2.2-2.5s.98-2.5 2.2-2.5c1.22 0 2.2 1.1 2.2 2.5s-1 2.5-2.2 2.5zm6.96 0c-1.2 0-2.2-1.1-2.2-2.5s.98-2.5 2.2-2.5c1.22 0 2.2 1.1 2.2 2.5s-1 2.5-2.2 2.5z"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section style="padding:0 4vw 20px; max-width:1100px; margin:0 auto;">
+    <h2 style="font-size:1.3rem; font-weight:700; margin-bottom:18px; text-align:center;">Features</h2>
+  </section>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">🎬</div>
+      <div class="feature-title">Cinematic UI</div>
+      <div class="feature-desc">Dark glassmorphism design with neon purple accents, blur effects, and smooth transitions.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">Jikan API Powered</div>
+      <div class="feature-desc">All anime data is fetched dynamically from MyAnimeList via the Jikan REST API.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <div class="feature-title">Fully Responsive</div>
+      <div class="feature-desc">Optimized for mobile, tablet, and desktop with touch-friendly controls.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <div class="feature-title">Advanced Search</div>
+      <div class="feature-desc">Filter by genre, type, status, season, year, and sort with infinite scroll.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📅</div>
+      <div class="feature-title">Weekly Schedule</div>
+      <div class="feature-desc">Browse daily airing schedules from Monday through Sunday.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎮</div>
+      <div class="feature-title">Keyboard Shortcuts</div>
+      <div class="feature-desc">F for fullscreen, T for theater mode, arrows for episode navigation.</div>
+    </div>
+  </div>
+
+  <!-- Deployment Guides -->
+  <section style="padding:40px 4vw 20px; max-width:1100px; margin:0 auto;">
+    <h2 style="font-size:1.3rem; font-weight:700; margin-bottom:18px; text-align:center;">Deployment Guides</h2>
+  </section>
+  <div class="guides">
+    <div class="guide-card">
+      <div class="guide-title">🚀 GitHub Pages</div>
+      <div class="guide-step">Create a new public repository on GitHub.</div>
+      <div class="guide-step">Upload all 6 HTML files to the root of the repository.</div>
+      <div class="guide-step">Go to Settings → Pages → Source and select Deploy from a branch.</div>
+      <div class="guide-step">Choose the main branch and / (root) folder, then click Save.</div>
+      <div class="guide-step">Your site will be live at <code>https://yourusername.github.io/repo-name/</code> within minutes.</div>
+    </div>
+    <div class="guide-card">
+      <div class="guide-title">🌐 Cloudflare Pages</div>
+      <div class="guide-step">Log in to Cloudflare Dashboard and navigate to Pages.</div>
+      <div class="guide-step">Click Create a project → Upload assets.</div>
+      <div class="guide-step">Drag and drop your project folder containing all HTML files.</div>
+      <div class="guide-step">Cloudflare will auto-deploy and provide a <code>*.pages.dev</code> URL instantly.</div>
+      <div class="guide-step">Optional: Connect a custom domain in the Pages settings.</div>
+    </div>
+  </div>
+
+  <!-- Contact -->
+  <section style="padding:40px 4vw 20px; max-width:600px; margin:0 auto;">
+    <h2 style="font-size:1.3rem; font-weight:700; margin-bottom:18px; text-align:center;">Contact</h2>
+  </section>
+  <div class="contact">
+    <input type="text" class="contact-input" placeholder="Your Name">
+    <input type="email" class="contact-input" placeholder="Your Email">
+    <textarea class="contact-input" placeholder="Message" rows="4"></textarea>
+    <button class="contact-btn" onclick="alert('This is a UI demo. No backend is attached.')">Send Message</button>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-bottom">
+      <span>© 2026 AnimeStream. All rights reserved.</span>
+      <span>Built with Jikan API</span>
+    </div>
+  </footer>
+
+  <script>
+    const sidebar=document.getElementById('sidebar'), sidebarOverlay=document.getElementById('sidebarOverlay');
+    function toggleSidebar(){ sidebar.classList.toggle('open'); sidebarOverlay.classList.toggle('open'); }
+    document.getElementById('menuBtn').addEventListener('click', toggleSidebar);
+    sidebarOverlay.addEventListener('click', toggleSidebar);
+  </script>
 </body>
 </html>
