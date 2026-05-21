@@ -101,7 +101,7 @@
     .trailer-wrap { position:relative; padding-bottom:56.25%; border-radius: var(--radius); overflow:hidden; border:1px solid var(--border); background: var(--bg-elevated); }
     .trailer-wrap iframe { position:absolute; inset:0; width:100%; height:100%; border:none; }
 
-    /* Recommendations / Relations cards reuse */
+    /* Recommendations */
     .rec-scroll { display:flex; gap:16px; overflow-x:auto; padding-bottom:10px; }
     .rec-card { flex:0 0 auto; width:160px; cursor:pointer; transition: var(--transition); }
     .rec-card:hover { transform: translateY(-5px); }
@@ -109,12 +109,8 @@
     .rec-title { font-size:0.85rem; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 
     /* Footer */
-    .footer { border-top:1px solid var(--border); padding: 50px 4vw 30px; background: var(--bg-elevated); margin-top:40px; }
-    .footer-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:36px; margin-bottom:30px; }
-    .footer-title { font-size:1rem; font-weight:700; margin-bottom:14px; color: var(--accent-light); }
-    .footer-link { display:block; color: var(--text-secondary); margin-bottom:8px; font-size:0.88rem; transition: var(--transition); }
-    .footer-link:hover { color: var(--accent); }
-    .footer-bottom { border-top:1px solid var(--border); padding-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; color: var(--text-secondary); font-size:0.82rem; }
+    .footer { border-top:1px solid var(--border); padding: 40px 4vw 30px; background: var(--bg-elevated); margin-top:40px; text-align:center; }
+    .footer-bottom { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:12px; color: var(--text-secondary); font-size:0.82rem; }
 
     @media (max-width: 768px) {
       .poster { width:160px; }
@@ -122,6 +118,7 @@
       .banner-content { gap:20px; }
     }
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -142,10 +139,10 @@
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-title">Menu</div>
-    <a href="index.html" class="sidebar-link">🏠 Home</a>
-    <a href="search.html" class="sidebar-link">🔍 Search</a>
-    <a href="schedule.html" class="sidebar-link">📅 Schedule</a>
-    <a href="creator.html" class="sidebar-link">👤 Creator</a>
+    <a href="index.html" class="sidebar-link">&#127968; Home</a>
+    <a href="search.html" class="sidebar-link">&#128269; Search</a>
+    <a href="schedule.html" class="sidebar-link">&#128197; Schedule</a>
+    <a href="creator.html" class="sidebar-link">&#128100; Creator</a>
   </nav>
 
   <!-- Search Overlay -->
@@ -215,179 +212,137 @@
     </div>
   </section>
 
-  <!-- Relations -->
-  <section class="section" id="relationsSection" style="display:none;">
-    <h2 class="section-title">Relations</h2>
-    <div class="rec-scroll" id="relations"></div>
-  </section>
-
   <!-- Footer -->
   <footer class="footer">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-title">AnimeStream</div>
-        <a href="index.html" class="footer-link">Home</a>
-        <a href="search.html" class="footer-link">Search</a>
-        <a href="schedule.html" class="footer-link">Schedule</a>
-        <a href="creator.html" class="footer-link">Creator</a>
-      </div>
-      <div>
-        <div class="footer-title">Legal</div>
-        <span class="footer-link">Disclaimer: This site does not host any video files. All content is provided by third-party services.</span>
-      </div>
-    </div>
     <div class="footer-bottom">
-      <span>© 2026 AnimeStream. All rights reserved.</span>
+      <span>&#169; 2026 AnimeStream. All rights reserved.</span>
       <span>Built with Jikan API</span>
     </div>
   </footer>
 
   <script>
-    const API = 'https://api.jikan.moe/v4';
+    const API = "https://api.jikan.moe/v4";
     const params = new URLSearchParams(location.search);
-    const malId = params.get('id');
-    if (!malId) location.href = 'index.html';
+    const malId = params.get("id");
+    if (!malId) location.href = "index.html";
 
     async function fetchJikan(endpoint) {
-      try { await new Promise(r=>setTimeout(r,350)); const res=await fetch(API+endpoint); if(!res.ok) throw new Error(res.status); return (await res.json()).data; }
+      try { await new Promise(r=>setTimeout(r,400)); const res=await fetch(API+endpoint); if(!res.ok) throw new Error(res.status); const j=await res.json(); return j.data||null; }
       catch(e){ console.error(e); return null; }
     }
 
     /* Sidebar & Search */
-    const sidebar=document.getElementById('sidebar'), sidebarOverlay=document.getElementById('sidebarOverlay');
-    function toggleSidebar(){ sidebar.classList.toggle('open'); sidebarOverlay.classList.toggle('open'); }
-    document.getElementById('menuBtn').addEventListener('click', toggleSidebar);
-    sidebarOverlay.addEventListener('click', toggleSidebar);
+    const sidebar=document.getElementById("sidebar"), sidebarOverlay=document.getElementById("sidebarOverlay");
+    function toggleSidebar(){ sidebar.classList.toggle("open"); sidebarOverlay.classList.toggle("open"); }
+    document.getElementById("menuBtn").addEventListener("click", toggleSidebar);
+    sidebarOverlay.addEventListener("click", toggleSidebar);
 
-    const searchOverlay=document.getElementById('searchOverlay'), searchInput=document.getElementById('searchInput'), searchSuggestions=document.getElementById('searchSuggestions');
-    function toggleSearch(){ searchOverlay.classList.toggle('open'); if(searchOverlay.classList.contains('open')){searchInput.focus(); searchInput.value=''; searchSuggestions.classList.remove('open');} }
-    document.getElementById('searchBtn').addEventListener('click', toggleSearch);
-    document.getElementById('closeSearch').addEventListener('click', toggleSearch);
+    const searchOverlay=document.getElementById("searchOverlay"), searchInput=document.getElementById("searchInput"), searchSuggestions=document.getElementById("searchSuggestions");
+    function toggleSearch(){ searchOverlay.classList.toggle("open"); if(searchOverlay.classList.contains("open")){searchInput.focus(); searchInput.value=""; searchSuggestions.classList.remove("open");} }
+    document.getElementById("searchBtn").addEventListener("click", toggleSearch);
+    document.getElementById("closeSearch").addEventListener("click", toggleSearch);
     let searchTimeout;
-    searchInput.addEventListener('input', e=>{ clearTimeout(searchTimeout); const q=e.target.value.trim(); if(!q){searchSuggestions.classList.remove('open'); return;} searchTimeout=setTimeout(()=>doSearchSuggest(q),450); });
+    searchInput.addEventListener("input", e=>{ clearTimeout(searchTimeout); const q=e.target.value.trim(); if(!q){searchSuggestions.classList.remove("open"); return;} searchTimeout=setTimeout(()=>doSearchSuggest(q),450); });
     async function doSearchSuggest(q){
-      const data=await fetchJikan(`/anime?q=${encodeURIComponent(q)}&limit=8`);
+      const data=await fetchJikan("/anime?q="+encodeURIComponent(q)+"&limit=8");
       if(!data) return;
-      searchSuggestions.innerHTML=data.map(a=>`<a href="anime.html?id=${a.mal_id}" class="suggestion-item"><img src="${a.images.jpg.small_image_url}" alt="" loading="lazy"><div><div class="suggestion-title">${a.title}</div><div class="suggestion-meta">${a.type||''} • ${a.score||'N/A'}</div></div></a>`).join('');
-      searchSuggestions.classList.add('open');
+      searchSuggestions.innerHTML=data.map(a=>"<a href="anime.html?id="+a.mal_id+"" class="suggestion-item"><img src=""+a.images.jpg.small_image_url+"" alt="" loading="lazy"><div><div class="suggestion-title">"+a.title+"</div><div class="suggestion-meta">"+(a.type||"")+" &bull; "+(a.score||"N/A")+"</div></div></a>").join("");
+      searchSuggestions.classList.add("open");
     }
 
     /* Banner & Details */
     async function loadAnime() {
-      const a = await fetchJikan(`/anime/${malId}`);
+      const a = await fetchJikan("/anime/"+malId);
       if (!a) return;
-      document.title = `${a.title} — AnimeStream`;
-      const banner = document.getElementById('banner');
-      banner.style.backgroundImage = `url('${a.images.jpg.large_image_url}')`;
-      const genres = a.genres.map(g => `<span class="genre-tag">${g.name}</span>`).join('');
-      document.getElementById('bannerContent').innerHTML = `
-        <img src="${a.images.jpg.large_image_url}" class="poster" alt="${a.title}">
-        <div class="meta-block">
-          <h1 class="meta-title">${a.title}</h1>
-          <div class="meta-row">
-            <span class="meta-badge">${a.type||'?'}</span>
-            <span class="meta-badge">${a.status||'?'}</span>
-            <span class="meta-badge score">★ ${a.score||'N/A'}</span>
-            <span class="meta-badge">${a.duration||'?'}</span>
-            <span class="meta-badge">${a.episodes||'?'} EPS</span>
-          </div>
-          <div class="genres">${genres}</div>
-          <p class="synopsis">${a.synopsis||'No synopsis available.'}</p>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <a href="watch.html?id=${malId}&ep=1" class="btn btn-primary">▶ Watch Now</a>
-            ${a.trailer && a.trailer.embed_url ? `<button class="btn btn-secondary" onclick="document.getElementById('trailerSection').scrollIntoView({behavior:'smooth'})">▶ Trailer</button>` : ''}
-          </div>
-        </div>
-      `;
+      document.title = a.title + " — AnimeStream";
+      const banner = document.getElementById("banner");
+      banner.style.backgroundImage = "url("+a.images.jpg.large_image_url+")";
+      const genres = a.genres.map(g => "<span class="genre-tag">"+g.name+"</span>").join("");
+      document.getElementById("bannerContent").innerHTML =
+        '<img src="'+a.images.jpg.large_image_url+'" class="poster" alt="'+a.title+'">' +
+        '<div class="meta-block">' +
+          '<h1 class="meta-title">'+a.title+'</h1>' +
+          '<div class="meta-row">' +
+            '<span class="meta-badge">'+(a.type||"?")+'</span>' +
+            '<span class="meta-badge">'+(a.status||"?")+'</span>' +
+            '<span class="meta-badge score">&#9733; '+(a.score||"N/A")+'</span>' +
+            '<span class="meta-badge">'+(a.duration||"?")+'</span>' +
+            '<span class="meta-badge">'+(a.episodes||"?")+' EPS</span>' +
+          '</div>' +
+          '<div class="genres">'+genres+'</div>' +
+          '<p class="synopsis">'+(a.synopsis||"No synopsis available.")+'</p>' +
+          '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+            '<a href="watch.html?id='+malId+'&ep=1" class="btn btn-primary">&#9654; Watch Now</a>' +
+            (a.trailer && a.trailer.embed_url ? '<button class="btn btn-secondary" onclick="document.getElementById('trailerSection').scrollIntoView({behavior:'smooth'})">&#9654; Trailer</button>' : "") +
+          '</div>' +
+        '</div>';
 
       // Info grid
-      const studio = a.studios.map(s=>s.name).join(', ') || 'Unknown';
-      const producers = a.producers.map(p=>p.name).join(', ') || 'Unknown';
-      const licensors = a.licensors.join(', ') || 'Unknown';
-      document.getElementById('infoGrid').innerHTML = `
-        <div class="info-cell"><div class="info-label">Studio</div><div class="info-value">${studio}</div></div>
-        <div class="info-cell"><div class="info-label">Aired</div><div class="info-value">${a.aired?.string||'?'}</div></div>
-        <div class="info-cell"><div class="info-label">Season</div><div class="info-value">${a.season||'?'} ${a.year||''}</div></div>
-        <div class="info-cell"><div class="info-label">Rating</div><div class="info-value">${a.rating||'?'}</div></div>
-        <div class="info-cell"><div class="info-label">Rank</div><div class="info-value">#${a.rank||'?'}</div></div>
-        <div class="info-cell"><div class="info-label">Popularity</div><div class="info-value">#${a.popularity||'?'}</div></div>
-        <div class="info-cell"><div class="info-label">Source</div><div class="info-value">${a.source||'?'}</div></div>
-        <div class="info-cell"><div class="info-label">Members</div><div class="info-value">${a.members?.toLocaleString()||'?'}</div></div>
-      `;
+      const studio = a.studios.map(s=>s.name).join(", ") || "Unknown";
+      document.getElementById("infoGrid").innerHTML =
+        '<div class="info-cell"><div class="info-label">Studio</div><div class="info-value">'+studio+'</div></div>' +
+        '<div class="info-cell"><div class="info-label">Aired</div><div class="info-value">'+(a.aired?a.aired.string||"?":"?")+'</div></div>' +
+        '<div class="info-cell"><div class="info-label">Season</div><div class="info-value">'+(a.season||"?")+" "+(a.year||"")+'</div></div>' +
+        '<div class="info-cell"><div class="info-label">Rating</div><div class="info-value">'+(a.rating||"?")+'</div></div>' +
+        '<div class="info-cell"><div class="info-label">Rank</div><div class="info-value">#'+(a.rank||"?")+'</div></div>' +
+        '<div class="info-cell"><div class="info-label">Popularity</div><div class="info-value">#'+(a.popularity||"?")+'</div></div>' +
+        '<div class="info-cell"><div class="info-label">Source</div><div class="info-value">'+(a.source||"?")+'</div></div>' +
+        '<div class="info-cell"><div class="info-label">Members</div><div class="info-value">'+((a.members||0).toLocaleString())+'</div></div>';
 
       // Trailer
       if (a.trailer && a.trailer.embed_url) {
-        document.getElementById('trailerSection').style.display = 'block';
-        document.getElementById('trailerWrap').innerHTML = `<iframe src="${a.trailer.embed_url}" allowfullscreen loading="lazy" title="Trailer"></iframe>`;
+        document.getElementById("trailerSection").style.display = "block";
+        document.getElementById("trailerWrap").innerHTML = '<iframe src="'+a.trailer.embed_url+'" allowfullscreen loading="lazy" title="Trailer"></iframe>';
       }
 
       loadEpisodes(a.episodes);
       loadCharacters();
       loadRecommendations();
-      loadRelations();
     }
 
     async function loadEpisodes(totalEp) {
-      const data = await fetchJikan(`/anime/${malId}/episodes`);
-      const container = document.getElementById('episodes');
+      const data = await fetchJikan("/anime/"+malId+"/episodes");
+      const container = document.getElementById("episodes");
       if (data && data.length) {
-        container.innerHTML = data.map(ep => `
-          <a href="watch.html?id=${malId}&ep=${ep.mal_id}" class="ep-card">
-            <div class="ep-num">${ep.mal_id}</div>
-            <div class="ep-title">${ep.title || `Episode ${ep.mal_id}`}</div>
-            ${ep.duration ? `<div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px;">${ep.duration}</div>` : ''}
-          </a>
-        `).join('');
+        container.innerHTML = data.map(ep =>
+          '<a href="watch.html?id='+malId+'&ep='+ep.mal_id+'" class="ep-card">' +
+            '<div class="ep-num">'+ep.mal_id+'</div>' +
+            '<div class="ep-title">'+(ep.title || "Episode "+ep.mal_id)+'</div>' +
+            (ep.duration ? '<div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px;">'+ep.duration+'</div>' : "") +
+          '</a>'
+        ).join("");
       } else {
         const count = totalEp || 12;
-        container.innerHTML = Array.from({length: Math.min(count, 60)}, (_, i) => `
-          <a href="watch.html?id=${malId}&ep=${i+1}" class="ep-card">
-            <div class="ep-num">${i+1}</div>
-            <div class="ep-title">Episode ${i+1}</div>
-          </a>
-        `).join('');
+        container.innerHTML = Array.from({length: Math.min(count, 60)}, (_, i) =>
+          '<a href="watch.html?id='+malId+'&ep='+(i+1)+'" class="ep-card">' +
+            '<div class="ep-num">'+(i+1)+'</div>' +
+            '<div class="ep-title">Episode '+(i+1)+'</div>' +
+          '</a>'
+        ).join("");
       }
     }
 
     async function loadCharacters() {
-      const data = await fetchJikan(`/anime/${malId}/characters`);
+      const data = await fetchJikan("/anime/"+malId+"/characters");
       if (!data) return;
-      document.getElementById('characters').innerHTML = data.slice(0, 15).map(c => `
-        <div class="char-card">
-          <img src="${c.character.images.jpg.image_url}" alt="${c.character.name}" loading="lazy">
-          <div class="char-name">${c.character.name}</div>
-          <div class="char-role">${c.role}</div>
-        </div>
-      `).join('');
+      document.getElementById("characters").innerHTML = data.slice(0, 15).map(c =>
+        '<div class="char-card">' +
+          '<img src="'+c.character.images.jpg.image_url+'" alt="'+c.character.name+'" loading="lazy">' +
+          '<div class="char-name">'+c.character.name+'</div>' +
+          '<div class="char-role">'+c.role+'</div>' +
+        '</div>'
+      ).join("");
     }
 
     async function loadRecommendations() {
-      const data = await fetchJikan(`/anime/${malId}/recommendations`);
+      const data = await fetchJikan("/anime/"+malId+"/recommendations");
       if (!data) return;
-      document.getElementById('recommendations').innerHTML = data.slice(0, 12).map(r => `
-        <a href="anime.html?id=${r.entry.mal_id}" class="rec-card">
-          <img src="${r.entry.images.jpg.large_image_url}" alt="${r.entry.title}" loading="lazy">
-          <div class="rec-title">${r.entry.title}</div>
-        </a>
-      `).join('');
-    }
-
-    async function loadRelations() {
-      const data = await fetchJikan(`/anime/${malId}/relations`);
-      if (!data) return;
-      const entries = [];
-      data.forEach(rel => {
-        rel.entry.forEach(e => { if (e.type === 'anime') entries.push({...e, relation: rel.relation}); });
-      });
-      if (!entries.length) return;
-      document.getElementById('relationsSection').style.display = 'block';
-      document.getElementById('relations').innerHTML = entries.slice(0, 12).map(e => `
-        <a href="anime.html?id=${e.mal_id}" class="rec-card">
-          <img src="${e.images.jpg.large_image_url}" alt="${e.name}" loading="lazy">
-          <div class="rec-title">${e.name}</div>
-          <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">${e.relation}</div>
-        </a>
-      `).join('');
+      document.getElementById("recommendations").innerHTML = data.slice(0, 12).map(r =>
+        '<a href="anime.html?id='+r.entry.mal_id+'" class="rec-card">' +
+          '<img src="'+r.entry.images.jpg.large_image_url+'" alt="'+r.entry.title+'" loading="lazy">' +
+          '<div class="rec-title">'+r.entry.title+'</div>' +
+        '</a>'
+      ).join("");
     }
 
     loadAnime();
