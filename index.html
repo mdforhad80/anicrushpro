@@ -501,6 +501,11 @@
             return div.innerHTML;
         }
 
+        // Small delay helper to stay under Jikan rate limit (3 req/sec)
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         function createCard(anime) {
             const div = document.createElement('div');
             div.className = 'anime-card fade-in';
@@ -544,10 +549,17 @@
             }
         }
 
-        async function loadSection(title, url, containerId, count=15) {
+        // Retry up to 2 times if we hit the 429 rate limit
+        async function loadSection(title, url, containerId, count=15, retries=2) {
             showSkeletons(containerId, 6);
             try {
                 const res = await fetch(url);
+                // If rate limited, wait 1.2s and retry
+                if (res.status === 429 && retries > 0) {
+                    await delay(1200);
+                    return loadSection(title, url, containerId, count, retries - 1);
+                }
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 const container = $(containerId);
                 container.innerHTML = '';
@@ -561,7 +573,7 @@
                     container.appendChild(card);
                 });
             } catch(e) {
-                $(containerId).innerHTML = '<p style="color:var(--text-secondary);padding:20px;">Failed to load content.</p>';
+                $(containerId).innerHTML = `<p style="color:var(--text-secondary);padding:20px;">Failed to load: ${e.message}</p>`;
             }
         }
 
@@ -683,20 +695,35 @@
            INITIALIZE HOME PAGE
            ========================================= */
         async function initHome() {
-            // Hero: Top Airing
+            // 1) Hero: Top Airing (fetch first)
             try {
                 const res = await fetch(`${API_BASE}/top/anime?filter=airing&limit=5&sfw=true`);
-                const data = await res.json();
-                if(data.data) initHero(data.data);
-            } catch(e) { $('heroTrack').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-secondary)">Failed to load hero content</div>'; }
+                if (res.ok) {
+                    const data = await res.json();
+                    if(data.data) initHero(data.data);
+                }
+            } catch(e) {
+                $('heroTrack').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-secondary)">Failed to load hero content</div>';
+            }
 
-            // Sections
-            loadSection('Recently Updated', `${API_BASE}/seasons/now?limit=15&sfw=true`, 'recentRow');
-            loadSection('Trending', `${API_BASE}/top/anime?filter=bypopularity&limit=15&sfw=true`, 'trendingRow');
-            loadSection('Top Rated', `${API_BASE}/top/anime?limit=15&sfw=true`, 'topRow');
-            loadSection('Top Airing', `${API_BASE}/top/anime?filter=airing&limit=15&sfw=true`, 'airingRow');
-            loadSection('Upcoming', `${API_BASE}/seasons/upcoming?limit=15&sfw=true`, 'upcomingRow');
-            loadSection('Completed', `${API_BASE}/anime?status=complete&order_by=popularity&sort=desc&limit=15&sfw=true`, 'completedRow');
+            // Stagger remaining requests ~350ms apart to respect Jikan's 3 req/sec limit
+            await delay(350);
+            await loadSection('Recently Updated', `${API_BASE}/seasons/now?limit=15&sfw=true`, 'recentRow');
+
+            await delay(350);
+            await loadSection('Trending', `${API_BASE}/top/anime?filter=bypopularity&limit=15&sfw=true`, 'trendingRow');
+
+            await delay(350);
+            await loadSection('Top Rated', `${API_BASE}/top/anime?limit=15&sfw=true`, 'topRow');
+
+            await delay(350);
+            await loadSection('Top Airing', `${API_BASE}/top/anime?filter=airing&limit=15&sfw=true`, 'airingRow');
+
+            await delay(350);
+            await loadSection('Upcoming', `${API_BASE}/seasons/upcoming?limit=15&sfw=true`, 'upcomingRow');
+
+            await delay(350);
+            await loadSection('Completed', `${API_BASE}/anime?status=complete&order_by=popularity&sort=desc&limit=15&sfw=true`, 'completedRow');
         }
 
         initHome();
