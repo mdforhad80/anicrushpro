@@ -221,19 +221,11 @@
 
     /* ================= FOOTER ================= */
     .footer {
-      border-top:1px solid var(--border); padding: 60px 4vw 30px;
-      background: var(--bg-elevated);
+      border-top:1px solid var(--border); padding: 40px 4vw 30px;
+      background: var(--bg-elevated); text-align:center;
     }
-    .footer-grid {
-      display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap:36px; margin-bottom:40px;
-    }
-    .footer-title { font-size:1rem; font-weight:700; margin-bottom:14px; color: var(--accent-light); }
-    .footer-link { display:block; color: var(--text-secondary); margin-bottom:8px; font-size:0.88rem; transition: var(--transition); }
-    .footer-link:hover { color: var(--accent); }
     .footer-bottom {
-      border-top:1px solid var(--border); padding-top:20px;
-      display:flex; justify-content:space-between; align-items:center;
+      display:flex; justify-content:center; align-items:center;
       flex-wrap:wrap; gap:12px; color: var(--text-secondary); font-size:0.82rem;
     }
 
@@ -269,6 +261,7 @@
       .hero-content { padding-bottom:60px; }
     }
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -428,26 +421,6 @@
 
   <!-- ================= FOOTER ================= -->
   <footer class="footer">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-title">AnimeStream</div>
-        <a href="index.html" class="footer-link">Home</a>
-        <a href="search.html" class="footer-link">Search</a>
-        <a href="schedule.html" class="footer-link">Schedule</a>
-        <a href="creator.html" class="footer-link">Creator</a>
-      </div>
-      <div>
-        <div class="footer-title">Categories</div>
-        <a href="search.html?type=tv" class="footer-link">TV Series</a>
-        <a href="search.html?type=movie" class="footer-link">Movies</a>
-        <a href="search.html?type=ova" class="footer-link">OVAs</a>
-        <a href="search.html?type=ona" class="footer-link">ONAs</a>
-      </div>
-      <div>
-        <div class="footer-title">Legal</div>
-        <span class="footer-link">Disclaimer: This site does not host any video files. All content is provided by third-party services.</span>
-      </div>
-    </div>
     <div class="footer-bottom">
       <span>© 2026 AnimeStream. All rights reserved.</span>
       <span>Built with Jikan API</span>
@@ -460,150 +433,156 @@
 
   <!-- ================= JAVASCRIPT ================= -->
   <script>
-    const API = 'https://api.jikan.moe/v4';
+    const API = "https://api.jikan.moe/v4";
 
     /* ---------- UTILITIES ---------- */
     async function fetchJikan(endpoint) {
       try {
-        await new Promise(r => setTimeout(r, 350)); // respect rate limit
+        await new Promise(r => setTimeout(r, 400));
         const res = await fetch(API + endpoint);
         if (!res.ok) throw new Error(res.status);
-        return (await res.json()).data;
-      } catch(e) { console.error('Jikan fetch failed:', e); return null; }
+        const json = await res.json();
+        return json.data || null;
+      } catch(e) { console.error("Jikan fetch failed:", endpoint, e); return null; }
     }
 
     /* ---------- SIDEBAR ---------- */
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebar = document.getElementById("sidebar");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
     function toggleSidebar() {
-      sidebar.classList.toggle('open');
-      sidebarOverlay.classList.toggle('open');
+      sidebar.classList.toggle("open");
+      sidebarOverlay.classList.toggle("open");
     }
-    document.getElementById('menuBtn').addEventListener('click', toggleSidebar);
-    sidebarOverlay.addEventListener('click', toggleSidebar);
+    document.getElementById("menuBtn").addEventListener("click", toggleSidebar);
+    sidebarOverlay.addEventListener("click", toggleSidebar);
 
     /* ---------- SEARCH OVERLAY ---------- */
-    const searchOverlay = document.getElementById('searchOverlay');
-    const searchInput = document.getElementById('searchInput');
-    const searchSuggestions = document.getElementById('searchSuggestions');
+    const searchOverlay = document.getElementById("searchOverlay");
+    const searchInput = document.getElementById("searchInput");
+    const searchSuggestions = document.getElementById("searchSuggestions");
     function toggleSearch() {
-      searchOverlay.classList.toggle('open');
-      if (searchOverlay.classList.contains('open')) { searchInput.focus(); searchInput.value=''; searchSuggestions.classList.remove('open'); }
+      searchOverlay.classList.toggle("open");
+      if (searchOverlay.classList.contains("open")) { searchInput.focus(); searchInput.value=""; searchSuggestions.classList.remove("open"); }
     }
-    document.getElementById('searchBtn').addEventListener('click', toggleSearch);
-    document.getElementById('closeSearch').addEventListener('click', toggleSearch);
+    document.getElementById("searchBtn").addEventListener("click", toggleSearch);
+    document.getElementById("closeSearch").addEventListener("click", toggleSearch);
 
     let searchTimeout;
-    searchInput.addEventListener('input', e => {
+    searchInput.addEventListener("input", e => {
       clearTimeout(searchTimeout);
       const q = e.target.value.trim();
-      if (!q) { searchSuggestions.classList.remove('open'); return; }
+      if (!q) { searchSuggestions.classList.remove("open"); return; }
       searchTimeout = setTimeout(() => doSearchSuggest(q), 450);
     });
     async function doSearchSuggest(q) {
-      const data = await fetchJikan(`/anime?q=${encodeURIComponent(q)}&limit=8`);
+      const data = await fetchJikan("/anime?q=" + encodeURIComponent(q) + "&limit=8");
       if (!data) return;
-      searchSuggestions.innerHTML = data.map(a => `
-        <a href="anime.html?id=${a.mal_id}" class="suggestion-item">
-          <img src="${a.images.jpg.small_image_url}" alt="" loading="lazy">
-          <div>
-            <div class="suggestion-title">${a.title}</div>
-            <div class="suggestion-meta">${a.type||''} • Score ${a.score||'N/A'}</div>
-          </div>
-        </a>
-      `).join('');
-      searchSuggestions.classList.add('open');
+      searchSuggestions.innerHTML = data.map(a =>
+        '<a href="anime.html?id=' + a.mal_id + '" class="suggestion-item">' +
+          '<img src="' + a.images.jpg.small_image_url + '" alt="" loading="lazy">' +
+          '<div>' +
+            '<div class="suggestion-title">' + a.title + '</div>' +
+            '<div class="suggestion-meta">' + (a.type || "") + " &bull; Score " + (a.score || "N/A") + '</div>' +
+          '</div>' +
+        '</a>'
+      ).join("");
+      searchSuggestions.classList.add("open");
     }
 
     /* ---------- HERO SLIDER ---------- */
     let heroSlides = [], heroIndex = 0;
     async function loadHero() {
-      const data = await fetchJikan('/top/anime?filter=airing&limit=10');
-      if (!data) return;
+      const data = await fetchJikan("/top/anime?filter=airing&limit=10");
+      if (!data || !data.length) {
+        document.getElementById("heroSlider").innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-secondary);">Failed to load hero data</div>';
+        return;
+      }
       heroSlides = data;
-      document.getElementById('heroDots').innerHTML = heroSlides.map((_,i)=>`<div class="dot ${i===0?'active':''}" onclick="goHero(${i})"></div>`).join('');
+      document.getElementById("heroDots").innerHTML = heroSlides.map((_,i) =>
+        '<div class="dot ' + (i === 0 ? "active" : "") + '" onclick="goHero(' + i + ')"></div>'
+      ).join("");
       renderHero();
-      setInterval(() => { heroIndex = (heroIndex+1)%heroSlides.length; renderHero(); }, 6000);
+      setInterval(() => { heroIndex = (heroIndex + 1) % heroSlides.length; renderHero(); }, 6000);
     }
     function renderHero() {
-      const container = document.getElementById('heroSlider');
-      container.innerHTML = heroSlides.map((a,i) => `
-        <div class="hero-slide ${i===heroIndex?'active':''}">
-          <div class="hero-bg" style="background-image:url('${a.images.jpg.large_image_url}')"></div>
-          <div class="hero-content">
-            <h1 class="hero-title">${a.title}</h1>
-            <div class="hero-meta">
-              <span class="hero-badge">${a.type||''}</span>
-              <span class="hero-badge">${a.status||''}</span>
-              <span class="hero-badge">★ ${a.score||'N/A'}</span>
-              <span class="hero-badge">${a.episodes||'?'} EPS</span>
-            </div>
-            <p class="hero-synopsis">${a.synopsis||''}</p>
-            <div class="hero-btns">
-              <a href="watch.html?id=${a.mal_id}&ep=1" class="btn btn-primary">▶ Watch Now</a>
-              <a href="anime.html?id=${a.mal_id}" class="btn btn-secondary">Details</a>
-            </div>
-          </div>
-        </div>
-      `).join('');
-      document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active', i===heroIndex));
+      const container = document.getElementById("heroSlider");
+      container.innerHTML = heroSlides.map((a,i) =>
+        '<div class="hero-slide ' + (i === heroIndex ? "active" : "") + '">' +
+          '<div class="hero-bg" style="background-image:url('' + a.images.jpg.large_image_url + '')"></div>' +
+          '<div class="hero-content">' +
+            '<h1 class="hero-title">' + a.title + '</h1>' +
+            '<div class="hero-meta">' +
+              '<span class="hero-badge">' + (a.type || "") + '</span>' +
+              '<span class="hero-badge">' + (a.status || "") + '</span>' +
+              '<span class="hero-badge">&#9733; ' + (a.score || "N/A") + '</span>' +
+              '<span class="hero-badge">' + (a.episodes || "?") + ' EPS</span>' +
+            '</div>' +
+            '<p class="hero-synopsis">' + (a.synopsis || "") + '</p>' +
+            '<div class="hero-btns">' +
+              '<a href="watch.html?id=' + a.mal_id + '&ep=1" class="btn btn-primary">&#9654; Watch Now</a>' +
+              '<a href="anime.html?id=' + a.mal_id + '" class="btn btn-secondary">Details</a>' +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      ).join("");
+      document.querySelectorAll(".dot").forEach((d,i) => d.classList.toggle("active", i === heroIndex));
     }
-    window.goHero = i => { heroIndex = i; renderHero(); };
-    document.getElementById('heroPrev').addEventListener('click', () => { heroIndex = (heroIndex-1+heroSlides.length)%heroSlides.length; renderHero(); });
-    document.getElementById('heroNext').addEventListener('click', () => { heroIndex = (heroIndex+1)%heroSlides.length; renderHero(); });
+    window.goHero = function(i) { heroIndex = i; renderHero(); };
+    document.getElementById("heroPrev").addEventListener("click", () => { heroIndex = (heroIndex - 1 + heroSlides.length) % heroSlides.length; renderHero(); });
+    document.getElementById("heroNext").addEventListener("click", () => { heroIndex = (heroIndex + 1) % heroSlides.length; renderHero(); });
 
     /* ---------- CARDS & SECTIONS ---------- */
     function createCard(a) {
-      const ep = a.episodes || '?';
-      return `
-        <a href="anime.html?id=${a.mal_id}" class="card">
-          <img class="card-img" src="${a.images.jpg.large_image_url}" alt="${a.title}" loading="lazy">
-          ${a.type==='TV' ? '<span class="card-badge badge-hd">HD</span>' : ''}
-          <span class="card-badge badge-ep">${ep} EPS</span>
-          <span class="card-score">★ ${a.score||'N/A'}</span>
-          <div class="card-info">
-            <div class="card-title">${a.title}</div>
-          </div>
-        </a>
-      `;
+      var ep = a.episodes || "?";
+      return (
+        '<a href="anime.html?id=' + a.mal_id + '" class="card">' +
+          '<img class="card-img" src="' + a.images.jpg.large_image_url + '" alt="' + a.title + '" loading="lazy">' +
+          (a.type === "TV" ? '<span class="card-badge badge-hd">HD</span>' : "") +
+          '<span class="card-badge badge-ep">' + ep + ' EPS</span>' +
+          '<span class="card-score">&#9733; ' + (a.score || "N/A") + '</span>' +
+          '<div class="card-info">' +
+            '<div class="card-title">' + a.title + '</div>' +
+          '</div>' +
+        '</a>'
+      );
     }
     async function loadSection(endpoint, containerId) {
       const container = document.getElementById(containerId);
       const data = await fetchJikan(endpoint);
       if (!data || !data.length) { container.innerHTML = '<p style="color:var(--text-secondary);padding:8px;">No data available.</p>'; return; }
-      container.innerHTML = data.map(createCard).join('');
+      container.innerHTML = data.map(createCard).join("");
     }
 
     /* ---------- CONTINUE WATCHING ---------- */
     function loadContinue() {
-      const history = JSON.parse(localStorage.getItem('watchHistory')||'[]');
+      const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
       if (!history.length) return;
-      const section = document.getElementById('continueSection');
-      const grid = document.getElementById('continueGrid');
-      grid.innerHTML = history.slice(0,10).map(h => `
-        <a href="watch.html?id=${h.id}&ep=${h.ep}" class="card">
-          <img class="card-img" src="${h.image}" alt="${h.title}" loading="lazy">
-          <span class="card-badge badge-ep">EP ${h.ep}</span>
-          <div class="card-info"><div class="card-title">${h.title}</div></div>
-        </a>
-      `).join('');
-      section.style.display = 'block';
+      const section = document.getElementById("continueSection");
+      const grid = document.getElementById("continueGrid");
+      grid.innerHTML = history.slice(0,10).map(h =>
+        '<a href="watch.html?id=' + h.id + '&ep=' + h.ep + '" class="card">' +
+          '<img class="card-img" src="' + h.image + '" alt="' + h.title + '" loading="lazy">' +
+          '<span class="card-badge badge-ep">EP ' + h.ep + '</span>' +
+          '<div class="card-info"><div class="card-title">' + h.title + '</div></div>' +
+        '</a>'
+      ).join("");
+      section.style.display = "block";
     }
 
     /* ---------- INITIAL LOAD ---------- */
     loadHero();
-    loadSection('/top/anime?filter=airing&limit=25', 'recentlyUpdated');
-    loadSection('/top/anime?filter=airing&limit=25', 'trending');
-    loadSection('/top/anime?limit=25', 'topRated');
-    loadSection('/seasons/now?limit=25', 'topAiring');
-    loadSection('/seasons/upcoming?limit=25', 'upcoming');
-    loadSection('/anime?status=complete&order_by=score&sort=desc&limit=25', 'completed');
+    loadSection("/top/anime?filter=airing&limit=25", "recentlyUpdated");
+    loadSection("/top/anime?limit=25", "trending");
+    loadSection("/top/anime?limit=25", "topRated");
+    loadSection("/seasons/now?limit=25", "topAiring");
+    loadSection("/seasons/upcoming?limit=25", "upcoming");
+    loadSection("/anime?status=complete&order_by=score&sort=desc&limit=25", "completed");
     loadContinue();
 
     /* ---------- BACK TO TOP ---------- */
-    const btt = document.getElementById('backToTop');
-    window.addEventListener('scroll', () => btt.classList.toggle('visible', window.scrollY > 600));
-    btt.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+    const btt = document.getElementById("backToTop");
+    window.addEventListener("scroll", () => btt.classList.toggle("visible", window.scrollY > 600));
+    btt.addEventListener("click", () => window.scrollTo({top:0, behavior:"smooth"}));
   </script>
 </body>
 </html>
