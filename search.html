@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Anime | Zenith Anime</title>
+    <meta name="description" content="Search and filter thousands of anime titles.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#050505; --surface:#0a0a0a; --card:#141414; --card-hover:#1c1c1c;
+            --primary:#a855f7; --primary-light:#c084fc; --accent:#7c3aed;
+            --text:#f8fafc; --text-secondary:#94a3b8; --border:rgba(255,255,255,0.06);
+            --radius:16px; --radius-sm:10px; --shadow:0 8px 32px rgba(0,0,0,0.5);
+            --glow:0 0 30px rgba(168,85,247,0.25); --transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden;}
+        ::-webkit-scrollbar{width:8px;height:8px;} ::-webkit-scrollbar-track{background:var(--surface);} ::-webkit-scrollbar-thumb{background:var(--primary);border-radius:4px;}
+
+        .container{max-width:1400px;margin:0 auto;padding:0 5%;}
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .fade-in{animation:fadeIn 0.5s ease forwards;}
+
+        /* Header */
+        .header{position:fixed;top:0;left:0;right:0;z-index:1000;padding:14px 5%;display:flex;align-items:center;justify-content:space-between;transition:var(--transition);}
+        .header.scrolled{background:rgba(5,5,5,0.92);backdrop-filter:blur(20px);box-shadow:0 4px 30px rgba(0,0,0,0.4);}
+        .menu-btn,.search-toggle{background:none;border:none;color:var(--text);cursor:pointer;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:var(--transition);}
+        .menu-btn:hover,.search-toggle:hover{background:var(--card);color:var(--primary);}
+        .logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text);}
+        .logo-icon{font-size:1.6rem;filter:drop-shadow(0 0 8px var(--primary));}
+        .logo-text{font-size:1.4rem;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--text),var(--primary-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+        .mobile-nav{position:fixed;top:0;left:0;bottom:0;width:300px;background:var(--surface);z-index:3000;transform:translateX(-100%);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);padding:30px;display:flex;flex-direction:column;gap:8px;}
+        .mobile-nav.open{transform:translateX(0);}
+        .mobile-nav-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;}
+        .close-nav{background:none;border:none;color:var(--text-secondary);font-size:1.5rem;cursor:pointer;}
+        .mobile-nav a{color:var(--text-secondary);text-decoration:none;font-size:1.1rem;font-weight:500;padding:14px 16px;border-radius:var(--radius-sm);transition:var(--transition);}
+        .mobile-nav a:hover{background:var(--card);color:var(--primary);}
+        .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2500;opacity:0;visibility:hidden;transition:opacity 0.3s;}
+        .overlay.active{opacity:1;visibility:visible;}
+
+        /* Search Hero */
+        .search-hero{padding:120px 5% 40px;text-align:center;}
+        .search-hero h1{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;margin-bottom:12px;}
+        .search-hero p{color:var(--text-secondary);margin-bottom:30px;}
+        .big-search{position:relative;max-width:700px;margin:0 auto 30px;}
+        .big-search input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:18px 24px;border-radius:var(--radius);font-size:1.1rem;outline:none;transition:var(--transition);padding-right:50px;}
+        .big-search input:focus{border-color:var(--primary);box-shadow:var(--glow);}
+        .big-search button{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--primary);border:none;color:#fff;width:40px;height:40px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+        /* Filters */
+        .filters{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:40px;}
+        .filter-select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:var(--radius-sm);outline:none;font-size:0.9rem;cursor:pointer;transition:var(--transition);}
+        .filter-select:focus{border-color:var(--primary);}
+
+        /* Results Grid */
+        .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:24px;margin-bottom:60px;}
+        .anime-card{cursor:pointer;transition:transform 0.35s;}
+        .anime-card:hover{transform:translateY(-8px);}
+        .card-image{position:relative;aspect-ratio:3/4;border-radius:var(--radius);overflow:hidden;background:var(--card);box-shadow:var(--shadow);}
+        .card-image img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s;}
+        .anime-card:hover .card-image img{transform:scale(1.1);}
+        .card-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.45);opacity:0;transition:opacity 0.3s;display:flex;align-items:center;justify-content:center;}
+        .anime-card:hover .card-overlay{opacity:1;}
+        .play-btn{width:48px;height:48px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;transform:scale(0.8);transition:transform 0.3s;box-shadow:var(--glow);}
+        .anime-card:hover .play-btn{transform:scale(1);}
+        .card-badges{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none;}
+        .badge{font-size:0.65rem;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);color:#fff;}
+        .badge.score{background:rgba(234,179,8,0.95);color:#000;}
+        .card-info{padding:12px 4px 4px;}
+        .card-title{font-size:0.9rem;font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px;}
+        .card-meta{font-size:0.8rem;color:var(--text-secondary);}
+
+        .loading-more{text-align:center;padding:40px;color:var(--text-secondary);display:none;}
+        .loading-more.active{display:block;}
+        .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        .no-results{text-align:center;padding:80px 20px;color:var(--text-secondary);}
+        .no-results h2{font-size:1.5rem;color:var(--text);margin-bottom:10px;}
+
+        /* Footer */
+        .footer{background:var(--surface);border-top:1px solid var(--border);padding:60px 5% 30px;margin-top:40px;}
+        .footer-content{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1fr 2fr;gap:60px;}
+        .footer-brand .logo-text{font-size:1.8rem;margin-bottom:12px;display:inline-block;}
+        .footer-brand p{color:var(--text-secondary);max-width:300px;line-height:1.6;}
+        .footer-links{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;}
+        .footer-links h4{font-size:0.9rem;font-weight:700;margin-bottom:20px;color:var(--text);text-transform:uppercase;letter-spacing:1px;}
+        .footer-links a{display:block;color:var(--text-secondary);text-decoration:none;margin-bottom:12px;font-size:0.9rem;transition:var(--transition);}
+        .footer-links a:hover{color:var(--primary);transform:translateX(4px);}
+        .footer-bottom{max-width:1400px;margin:40px auto 0;padding-top:30px;border-top:1px solid var(--border);text-align:center;color:var(--text-secondary);font-size:0.85rem;}
+        .disclaimer{margin-top:10px;font-size:0.75rem;opacity:0.7;}
+
+        @media (max-width:768px){
+            .results-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;}
+            .footer-content{grid-template-columns:1fr;gap:40px;}
+            .footer-links{grid-template-columns:1fr 1fr;}
+            .filters{flex-direction:column;align-items:stretch;}
+            .filter-select{width:100%;}
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header" id="header">
+        <div class="header-left">
+            <button class="menu-btn" id="menuBtn" aria-label="Menu">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+        </div>
+        <a href="index.html" class="logo">
+            <span class="logo-icon">⚡</span>
+            <span class="logo-text">Zenith</span>
+        </a>
+        <div class="header-right">
+            <button class="search-toggle" id="searchToggle" aria-label="Search" style="opacity:0;pointer-events:none;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <nav class="mobile-nav" id="mobileNav">
+        <div class="mobile-nav-header"><span class="logo-text">Zenith</span><button class="close-nav" id="closeNav">✕</button></div>
+        <a href="index.html">🏠 Home</a>
+        <a href="search.html">🔍 Search</a>
+        <a href="schedule.html">📅 Schedule</a>
+        <a href="creator.html">ℹ️ About</a>
+    </nav>
+    <div class="overlay" id="overlay"></div>
+
+    <!-- SEARCH HERO -->
+    <section class="search-hero">
+        <h1>Discover Anime</h1>
+        <p>Search through thousands of titles with advanced filters</p>
+        <div class="big-search">
+            <input type="text" id="searchInput" placeholder="Search anime..." autocomplete="off" value="">
+            <button id="searchBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+        </div>
+        <div class="filters">
+            <select class="filter-select" id="typeFilter"><option value="">All Types</option><option value="tv">TV</option><option value="movie">Movie</option><option value="ova">OVA</option><option value="special">Special</option><option value="ona">ONA</option></select>
+            <select class="filter-select" id="statusFilter"><option value="">All Status</option><option value="airing">Airing</option><option value="complete">Completed</option><option value="upcoming">Upcoming</option></select>
+            <select class="filter-select" id="genreFilter"><option value="">All Genres</option></select>
+            <select class="filter-select" id="seasonFilter"><option value="">All Seasons</option><option value="spring">Spring</option><option value="summer">Summer</option><option value="fall">Fall</option><option value="winter">Winter</option></select>
+            <select class="filter-select" id="yearFilter"><option value="">All Years</option></select>
+            <select class="filter-select" id="sortFilter"><option value="popularity">Popularity</option><option value="score">Top Rated</option><option value="members">Most Members</option><option value="start_date">Newest</option></select>
+        </div>
+    </section>
+
+    <!-- RESULTS -->
+    <main class="container">
+        <div class="results-grid" id="resultsGrid"></div>
+        <div class="loading-more" id="loadingMore">
+            <div class="spinner"></div>
+            <p>Loading more anime...</p>
+        </div>
+        <div class="no-results" id="noResults" style="display:none;">
+            <h2>No results found</h2>
+            <p>Try adjusting your filters or search query.</p>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <span class="logo-text">Zenith</span>
+                <p>The ultimate destination for HD anime streaming.</p>
+            </div>
+            <div class="footer-links">
+                <div>
+                    <h4>Navigation</h4>
+                    <a href="index.html">Home</a>
+                    <a href="search.html">Search</a>
+                    <a href="schedule.html">Schedule</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Disclaimer</a>
+                    <a href="#">DMCA</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+                <div>
+                    <h4>Connect</h4>
+                    <a href="creator.html">About Developer</a>
+                    <a href="#">GitHub</a>
+                    <a href="#">Discord</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p> Zenith Anime. All rights reserved.</p>
+            <p class="disclaimer">This site does not store any files on its server. All contents are provided by non-affiliated third parties.</p>
+        </div>
+    </footer>
+
+    <script>
+        const API_BASE = 'https://api.jikan.moe/v4';
+        const $ = id => document.getElementById(id);
+
+        function escapeHtml(text){if(!text)return'';const d=document.createElement('div');d.textContent=text;return d.innerHTML;}
+        function getParam(name){return new URLSearchParams(window.location.search).get(name);}
+
+        let currentPage = 1;
+        let isLoading = false;
+        let hasMore = true;
+        let currentQuery = '';
+
+        /* Header */
+        window.addEventListener('scroll', () => {
+            $('header').classList.toggle('scrolled', window.scrollY > 50);
+        });
+        function openNav(){$('mobileNav').classList.add('open');$('overlay').classList.add('active');document.body.style.overflow='hidden';}
+        function closeNav(){$('mobileNav').classList.remove('open');$('overlay').classList.remove('active');document.body.style.overflow='';}
+        $('menuBtn').onclick = openNav; $('closeNav').onclick = closeNav; $('overlay').onclick = closeNav;
+
+        /* Year filter population */
+        const yearSelect = $('yearFilter');
+        const currentYear = new Date().getFullYear();
+        for(let y=currentYear;y>=1980;y--){
+            yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+        }
+
+        /* Genre filter population */
+        async function loadGenres(){
+            try{
+                const res = await fetch(`${API_BASE}/genres/anime`);
+                const data = await res.json();
+                data.data.forEach(g => {
+                    $('genreFilter').innerHTML += `<option value="${g.mal_id}">${g.name}</option>`;
+                });
+            }catch(e){}
+        }
+        loadGenres();
+
+        /* Search Function */
+        async function searchAnime(page=1, append=false){
+            if(isLoading) return;
+            isLoading = true;
+            if(page===1){$('resultsGrid').innerHTML='';hasMore=true;}
+            $('loadingMore').classList.toggle('active', page>1);
+            $('noResults').style.display='none';
+
+            const q = $('searchInput').value.trim();
+            const type = $('typeFilter').value;
+            const status = $('statusFilter').value;
+            const genre = $('genreFilter').value;
+            const season = $('seasonFilter').value;
+            const year = $('yearFilter').value;
+            const sort = $('sortFilter').value;
+
+            let url = `${API_BASE}/anime?page=${page}&limit=24&sfw=true`;
+            if(q) url += `&q=${encodeURIComponent(q)}`;
+            if(type) url += `&type=${type}`;
+            if(status) url += `&status=${status}`;
+            if(genre) url += `&genres=${genre}`;
+            if(season) url += `&season=${season}`;
+            if(year) url += `&start_date=${year}-01-01&end_date=${year}-12-31`;
+            if(sort) url += `&order_by=${sort}&sort=desc`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const grid = $('resultsGrid');
+
+                if(!append && (!data.data || !data.data.length)){
+                    $('noResults').style.display='block';
+                    isLoading=false;
+                    $('loadingMore').classList.remove('active');
+                    return;
+                }
+
+                if(data.data && data.data.length){
+                    data.data.forEach((anime,i) => {
+                        const card = document.createElement('div');
+                        card.className = 'anime-card fade-in';
+                        card.style.animationDelay = `${i*0.03}s`;
+                        card.onclick = () => location.href=`anime.html?id=${anime.mal_id}`;
+                        const img = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
+                        const score = anime.score ? anime.score.toFixed(1) : 'N/A';
+                        const eps = anime.episodes || '?';
+                        card.innerHTML = `
+                            <div class="card-image">
+                                <img src="${img}" alt="${escapeHtml(anime.title)}" loading="lazy" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,var(--card),var(--primary))'">
+                                <div class="card-overlay"><div class="play-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
+                                <div class="card-badges"><span class="badge score">★ ${score}</span>${eps!=='?'?`<span class="badge">${eps} EP</span>`:''}<span class="badge">${anime.type||'TV'}</span></div>
+                            </div>
+                            <div class="card-info"><h3 class="card-title">${escapeHtml(anime.title)}</h3><p class="card-meta">${anime.status||''} • ${anime.aired?.prop?.from?.year||''}</p></div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                    hasMore = data.pagination?.has_next_page !== false;
+                } else {
+                    hasMore = false;
+                }
+            } catch(e) {
+                if(!append) $('resultsGrid').innerHTML='<p style="color:var(--text-secondary);text-align:center;padding:40px;">Failed to load results.</p>';
+            }
+            isLoading = false;
+            $('loadingMore').classList.remove('active');
+        }
+
+        /* Events */
+        function doSearch(){currentPage=1;searchAnime(1,false);}
+        $('searchBtn').onclick = doSearch;
+        $('searchInput').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+        $('typeFilter').onchange = doSearch;
+        $('statusFilter').onchange = doSearch;
+        $('genreFilter').onchange = doSearch;
+        $('seasonFilter').onchange = doSearch;
+        $('yearFilter').onchange = doSearch;
+        $('sortFilter').onchange = doSearch;
+
+        /* Infinite Scroll */
+        window.addEventListener('scroll', () => {
+            if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 800 && !isLoading && hasMore){
+                currentPage++;
+                searchAnime(currentPage, true);
+            }
+        });
+
+        /* Init */
+        const initialQ = getParam('q');
+        if(initialQ){$('searchInput').value = initialQ;}
+        searchAnime(1, false);
+    </script>
+</body>
+</html>
