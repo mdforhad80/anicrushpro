@@ -1,95 +1,303 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AnimeStream – Watch</title>
-    <style>
-        /* Global styles + player-specific */
-        :root { /* ... */ }
-        .watch-container { display: flex; flex-wrap: wrap; gap: 20px; padding: clamp(16px,3vw,30px) clamp(12px,3vw,40px); }
-        .player-wrapper { flex: 1 1 700px; min-width: 0; }
-        .player-wrapper iframe { width: 100%; aspect-ratio: 16/9; border: none; border-radius: var(--radius); background: #000; }
-        .controls { display: flex; gap: 10px; margin: 10px 0; align-items: center; }
-        .controls select, .controls button { background: var(--bg2); color: #fff; border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
-        .episodes-sidebar { flex: 0 0 250px; background: var(--bg2); border-radius: var(--radius); padding: 15px; max-height: 500px; overflow-y: auto; }
-        .episodes-sidebar h3 { margin-bottom: 10px; }
-        .ep-item { display: block; padding: 8px; margin-bottom: 4px; background: var(--bg3); border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
-        .ep-item.active { background: var(--accent); color: #fff; }
-        .ep-item:hover { background: var(--accent); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watch — AnimeStream</title>
+  <meta name="description" content="Watch anime episodes in HD with sub/dub support.">
+  <style>
+    :root {
+      --bg: #050505; --bg-elevated: #0f0f0f; --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.08); --border: rgba(255,255,255,0.06);
+      --text: #f0f0f0; --text-secondary: #888; --accent: #a855f7; --accent-light: #c084fc;
+      --accent-glow: rgba(168,85,247,0.35); --warning: #f59e0b; --radius: 16px; --radius-sm: 8px;
+      --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height:1.5; }
+    a { color:inherit; text-decoration:none; }
+    img { max-width:100%; display:block; }
+
+    /* Header */
+    .header { position:sticky; top:0; z-index:100; height:64px; background: rgba(5,5,5,0.9); backdrop-filter: blur(20px); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 4vw; }
+    .logo { font-size:1.5rem; font-weight:800; background: linear-gradient(135deg, var(--accent), var(--accent-light)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .nav-right { display:flex; gap:12px; align-items:center; }
+    .icon-btn { width:38px; height:38px; border-radius:50%; background: var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text); transition:var(--transition); }
+    .icon-btn:hover { background: var(--accent); border-color: var(--accent); }
+
+    /* Layout */
+    .watch-layout { display:grid; grid-template-columns: 1fr 340px; gap:24px; max-width:1400px; margin:0 auto; padding: 24px 4vw; }
+    @media (max-width: 1024px) { .watch-layout { grid-template-columns: 1fr; } }
+
+    /* Player */
+    .player-wrapper {
+      position:relative; background: #000; border-radius: var(--radius); overflow:hidden;
+      border:1px solid var(--border); aspect-ratio: 16/9;
+    }
+    .player-wrapper iframe { width:100%; height:100%; border:none; }
+    .player-controls-row {
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      gap:12px; margin-top:14px;
+    }
+    .control-group { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .ctrl-btn {
+      padding: 8px 16px; border-radius: var(--radius-sm); font-weight:600; font-size:0.85rem;
+      cursor:pointer; border:1px solid var(--border); background: var(--surface); color:var(--text);
+      transition: var(--transition); display:inline-flex; align-items:center; gap:6px;
+    }
+    .ctrl-btn:hover { background: var(--surface-hover); border-color: var(--accent); }
+    .ctrl-btn.active { background: var(--accent); border-color: var(--accent); color:#fff; box-shadow: 0 0 12px var(--accent-glow); }
+    .server-selector { display:flex; gap:8px; align-items:center; }
+    .server-label { font-size:0.8rem; color:var(--text-secondary); }
+
+    /* Episode List Sidebar */
+    .sidebar-panel { background: var(--surface); border:1px solid var(--border); border-radius: var(--radius); padding:20px; max-height: calc(100vh - 120px); overflow-y:auto; }
+    .sidebar-title { font-size:1.05rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+    .ep-grid-small { display:grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap:8px; }
+    .ep-btn {
+      padding:10px 4px; border-radius: var(--radius-sm); font-weight:700; font-size:0.85rem;
+      cursor:pointer; border:1px solid var(--border); background: var(--bg-elevated); color:var(--text);
+      transition: var(--transition); text-align:center;
+    }
+    .ep-btn:hover { background: var(--surface-hover); border-color: var(--accent); }
+    .ep-btn.active { background: var(--accent); border-color: var(--accent); color:#fff; box-shadow: 0 0 10px var(--accent-glow); }
+
+    /* Anime Info Sidebar */
+    .info-card { display:flex; gap:14px; margin-bottom:20px; }
+    .info-card img { width:80px; height:110px; object-fit:cover; border-radius: var(--radius-sm); border:1px solid var(--border); }
+    .info-name { font-weight:700; font-size:1rem; line-height:1.3; margin-bottom:6px; }
+    .info-meta { font-size:0.82rem; color:var(--text-secondary); }
+
+    /* Sections below player */
+    .section { padding: 24px 4vw; max-width:1400px; margin:0 auto; }
+    .section-title { font-size:1.2rem; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+    .section-title::before { content:''; width:4px; height:20px; background: var(--accent); border-radius:2px; }
+    .rec-scroll { display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; }
+    .rec-card { flex:0 0 auto; width:150px; cursor:pointer; transition: var(--transition); }
+    .rec-card:hover { transform: translateY(-5px); }
+    .rec-card img { width:150px; height:215px; object-fit:cover; border-radius: var(--radius-sm); border:1px solid var(--border); margin-bottom:6px; }
+    .rec-title { font-size:0.82rem; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+    /* Comments UI */
+    .comment-box { background: var(--surface); border:1px solid var(--border); border-radius: var(--radius); padding:20px; margin-top:8px; }
+    .comment-input {
+      width:100%; background: var(--bg-elevated); border:1px solid var(--border); border-radius: var(--radius-sm);
+      padding:12px 14px; color:var(--text); outline:none; margin-bottom:12px; resize:vertical; min-height:80px;
+    }
+    .comment-input:focus { border-color: var(--accent); }
+
+    /* Theater Mode */
+    body.theater .player-wrapper {
+      position:fixed; inset:0; z-index:9999; width:100vw; height:100vh; border-radius:0; border:none; aspect-ratio:auto;
+    }
+    body.theater .hide-theater { display:none; }
+
+    /* Keyboard hint */
+    .kbd-hint { font-size:0.75rem; color:var(--text-secondary); margin-top:8px; }
+    kbd { background: var(--surface); border:1px solid var(--border); padding:2px 6px; border-radius:4px; font-family:inherit; }
+
+    /* Footer */
+    .footer { border-top:1px solid var(--border); padding: 40px 4vw 24px; background: var(--bg-elevated); margin-top:30px; }
+    .footer-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; color: var(--text-secondary); font-size:0.82rem; }
+
+    @media (max-width: 768px) {
+      .watch-layout { padding: 16px; }
+      .ep-grid-small { grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); }
+    }
+  </style>
 </head>
 <body>
-    <header class="header"> ... </header>
-    <!-- sidebar, search overlay -->
-    <main class="watch-container" id="watchRoot">
-        <!-- Dynamically filled -->
-    </main>
-    <script>
-        (function() {
-            const params = new URLSearchParams(window.location.search);
-            const animeId = params.get('id');
-            let currentEp = parseInt(params.get('ep')) || 1;
-            let subDub = 'sub'; // default
-            if (!animeId) return;
 
-            async function loadPlayer(){
-                try{
-                    const data = await apiManager.enqueue(`https://api.jikan.moe/v4/anime/${animeId}/full`, `anime_${animeId}`);
-                    const a = data.data;
-                    const totalEps = a.episodes || 12;
-                    document.getElementById('watchRoot').innerHTML = `
-                        <div class="player-wrapper">
-                            <iframe id="videoFrame" src="https://megaplay.buzz/stream/mal/${animeId}/${currentEp}/sub" allowfullscreen></iframe>
-                            <div class="controls">
-                                <button id="prevEpBtn" ${currentEp<=1?'disabled':''}>◀ Prev</button>
-                                <select id="epSelect"></select>
-                                <button id="nextEpBtn" ${currentEp>=totalEps?'disabled':''}>Next ▶</button>
-                                <select id="subDubSelect">
-                                    <option value="sub" ${subDub==='sub'?'selected':''}>Sub</option>
-                                    <option value="dub" ${subDub==='dub'?'selected':''}>Dub</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="episodes-sidebar" id="epSidebar">
-                            <h3>${a.title}</h3>
-                            <div id="epListContainer"></div>
-                        </div>
-                    `;
+  <!-- Header -->
+  <header class="header">
+    <div class="nav-right">
+      <a href="index.html" class="icon-btn" aria-label="Home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      </a>
+    </div>
+    <a href="index.html" class="logo">AnimeStream</a>
+    <div class="nav-right">
+      <a href="anime.html" id="backToAnime" class="icon-btn" aria-label="Back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5m7 7l-7-7 7-7"/></svg>
+      </a>
+    </div>
+  </header>
 
-                    // Populate episode selector & sidebar
-                    const epSelect = document.getElementById('epSelect');
-                    const epListContainer = document.getElementById('epListContainer');
-                    for(let i=1; i<=totalEps; i++){
-                        epSelect.innerHTML += `<option value="${i}" ${i===currentEp?'selected':''}>Episode ${i}</option>`;
-                        epListContainer.innerHTML += `<div class="ep-item ${i===currentEp?'active':''}" data-ep="${i}">Episode ${i}</div>`;
-                    }
+  <!-- Main Layout -->
+  <div class="watch-layout">
+    <!-- Left: Player -->
+    <div>
+      <div class="player-wrapper" id="playerWrapper">
+        <iframe id="player" allowfullscreen title="Anime Player"></iframe>
+      </div>
 
-                    // Update video source on episode/sub change
-                    function updateVideo(){
-                        const ep = currentEp;
-                        const type = document.getElementById('subDubSelect').value;
-                        document.getElementById('videoFrame').src = `https://megaplay.buzz/stream/mal/${animeId}/${ep}/${type}`;
-                        // Update active state in sidebar
-                        document.querySelectorAll('.ep-item').forEach(el=>el.classList.toggle('active', parseInt(el.dataset.ep)===ep));
-                        document.getElementById('epSelect').value = ep;
-                        document.getElementById('prevEpBtn').disabled = ep<=1;
-                        document.getElementById('nextEpBtn').disabled = ep>=totalEps;
-                    }
+      <div class="player-controls-row">
+        <div class="control-group">
+          <div class="server-selector">
+            <span class="server-label">Server:</span>
+            <button class="ctrl-btn active" id="serverMega">MegaPlay</button>
+          </div>
+          <button class="ctrl-btn" id="btnSub" onclick="setType('sub')">Sub</button>
+          <button class="ctrl-btn" id="btnDub" onclick="setType('dub')">Dub</button>
+        </div>
+        <div class="control-group">
+          <button class="ctrl-btn" onclick="prevEp()">← Prev</button>
+          <button class="ctrl-btn" onclick="nextEp()">Next →</button>
+          <button class="ctrl-btn hide-theater" onclick="toggleTheater()">🎭 Theater</button>
+          <button class="ctrl-btn" onclick="toggleFullscreen()">⛶ Full</button>
+        </div>
+      </div>
+      <div class="kbd-hint">
+        Shortcuts: <kbd>F</kbd> Fullscreen • <kbd>T</kbd> Theater • <kbd>←</kbd> Prev • <kbd>→</kbd> Next • <kbd>N</kbd> Next Ep
+      </div>
+    </div>
 
-                    document.getElementById('epSelect').addEventListener('change', (e)=>{ currentEp=parseInt(e.target.value); updateVideo(); });
-                    document.getElementById('subDubSelect').addEventListener('change', updateVideo);
-                    document.getElementById('prevEpBtn').addEventListener('click', ()=>{ if(currentEp>1){ currentEp--; updateVideo(); } });
-                    document.getElementById('nextEpBtn').addEventListener('click', ()=>{ if(currentEp<totalEps){ currentEp++; updateVideo(); } });
-                    document.getElementById('epListContainer').addEventListener('click', (e)=>{
-                        const item = e.target.closest('.ep-item');
-                        if(item){ currentEp = parseInt(item.dataset.ep); updateVideo(); }
-                    });
+    <!-- Right: Sidebar -->
+    <div class="hide-theater">
+      <div class="sidebar-panel">
+        <div class="info-card" id="animeInfo">
+          <div class="skeleton" style="width:80px;height:110px;border-radius:8px;"></div>
+          <div style="flex:1;">
+            <div class="skeleton" style="height:18px;width:80%;margin-bottom:8px;border-radius:4px;"></div>
+            <div class="skeleton" style="height:14px;width:50%;border-radius:4px;"></div>
+          </div>
+        </div>
+        <div class="sidebar-title">Episodes <span id="epCount" style="color:var(--text-secondary);font-weight:500;"></span></div>
+        <div class="ep-grid-small" id="epGrid"></div>
+      </div>
+    </div>
+  </div>
 
-                }catch(e){ document.getElementById('watchRoot').innerHTML = '<p style="color:#ef4444;">Failed to load player.</p>'; }
-            }
-            loadPlayer();
-        })();
-    </script>
+  <!-- Related -->
+  <section class="section">
+    <h2 class="section-title">Related Anime</h2>
+    <div class="rec-scroll" id="related"></div>
+  </section>
+
+  <!-- Comments UI -->
+  <section class="section">
+    <h2 class="section-title">Comments</h2>
+    <div class="comment-box">
+      <textarea class="comment-input" placeholder="Join the discussion... (demo only)"></textarea>
+      <button class="ctrl-btn" style="background:var(--accent);color:#fff;border-color:var(--accent);">Post Comment</button>
+      <div style="margin-top:16px;color:var(--text-secondary);font-size:0.9rem;">Comments are for UI demonstration. No backend is attached.</div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-bottom">
+      <span>© 2026 AnimeStream. All rights reserved.</span>
+      <span>Built with Jikan API</span>
+    </div>
+  </footer>
+
+  <script>
+    const API = 'https://api.jikan.moe/v4';
+    const params = new URLSearchParams(location.search);
+    const malId = params.get('id');
+    let currentEp = parseInt(params.get('ep')) || 1;
+    let currentType = 'sub';
+    let maxEpisodes = 12;
+    let animeData = null;
+
+    if (!malId) location.href = 'index.html';
+
+    async function fetchJikan(endpoint) {
+      try { await new Promise(r=>setTimeout(r,350)); const res=await fetch(API+endpoint); if(!res.ok) throw new Error(res.status); return (await res.json()).data; }
+      catch(e){ console.error(e); return null; }
+    }
+
+    function updatePlayer() {
+      const src = `https://megaplay.buzz/stream/mal/${malId}/${currentEp}/${currentType}`;
+      document.getElementById('player').src = src;
+      document.getElementById('btnSub').classList.toggle('active', currentType==='sub');
+      document.getElementById('btnDub').classList.toggle('active', currentType==='dub');
+      renderEpGrid();
+      saveHistory();
+      // Update URL without reload
+      const url = new URL(location.href);
+      url.searchParams.set('ep', currentEp);
+      history.replaceState({}, '', url);
+    }
+
+    window.setType = function(type) { currentType = type; updatePlayer(); };
+    window.prevEp = function() { if (currentEp > 1) { currentEp--; updatePlayer(); } };
+    window.nextEp = function() { if (currentEp < maxEpisodes) { currentEp++; updatePlayer(); } };
+
+    function renderEpGrid() {
+      const grid = document.getElementById('epGrid');
+      grid.innerHTML = Array.from({length: maxEpisodes}, (_, i) => `
+        <button class="ep-btn ${i+1===currentEp?'active':''}" onclick="goToEp(${i+1})">${i+1}</button>
+      `).join('');
+      const active = grid.querySelector('.active');
+      if (active) active.scrollIntoView({block:'nearest', behavior:'smooth'});
+    }
+    window.goToEp = function(n) { currentEp = n; updatePlayer(); };
+
+    function toggleTheater() { document.body.classList.toggle('theater'); }
+    window.toggleTheater = toggleTheater;
+
+    function toggleFullscreen() {
+      const wrapper = document.getElementById('playerWrapper');
+      if (!document.fullscreenElement) wrapper.requestFullscreen().catch(()=>{});
+      else document.exitFullscreen();
+    }
+    window.toggleFullscreen = toggleFullscreen;
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', e => {
+      if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFullscreen(); }
+      if (e.key === 't' || e.key === 'T') { e.preventDefault(); toggleTheater(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prevEp(); }
+      if (e.key === 'ArrowRight' || e.key === 'n' || e.key === 'N') { e.preventDefault(); nextEp(); }
+    });
+
+    function saveHistory() {
+      if (!animeData) return;
+      let history = JSON.parse(localStorage.getItem('watchHistory')||'[]');
+      history = history.filter(h => h.id !== parseInt(malId));
+      history.unshift({
+        id: parseInt(malId), title: animeData.title,
+        image: animeData.images.jpg.small_image_url,
+        ep: currentEp, time: Date.now()
+      });
+      if (history.length > 20) history.pop();
+      localStorage.setItem('watchHistory', JSON.stringify(history));
+    }
+
+    async function loadAnime() {
+      const a = await fetchJikan(`/anime/${malId}`);
+      if (!a) return;
+      animeData = a;
+      document.title = `EP ${currentEp} — ${a.title} — AnimeStream`;
+      maxEpisodes = a.episodes || 12;
+      document.getElementById('epCount').textContent = `(${maxEpisodes})`;
+      document.getElementById('animeInfo').innerHTML = `
+        <img src="${a.images.jpg.image_url}" alt="${a.title}">
+        <div>
+          <div class="info-name">${a.title}</div>
+          <div class="info-meta">${a.type||''} • ${a.status||''} • ★ ${a.score||'N/A'}</div>
+        </div>
+      `;
+      document.getElementById('backToAnime').href = `anime.html?id=${malId}`;
+      renderEpGrid();
+      updatePlayer();
+      loadRelated();
+    }
+
+    async function loadRelated() {
+      const data = await fetchJikan(`/anime/${malId}/recommendations`);
+      if (!data) return;
+      document.getElementById('related').innerHTML = data.slice(0, 10).map(r => `
+        <a href="anime.html?id=${r.entry.mal_id}" class="rec-card">
+          <img src="${r.entry.images.jpg.large_image_url}" alt="${r.entry.title}" loading="lazy">
+          <div class="rec-title">${r.entry.title}</div>
+        </a>
+      `).join('');
+    }
+
+    loadAnime();
+  </script>
 </body>
 </html>
