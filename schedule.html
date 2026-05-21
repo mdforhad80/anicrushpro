@@ -1,105 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Anime airing schedule by day of the week.">
-    <title>AnimeStream – Schedule</title>
-    <style>
-        /* Same global styles as before, plus schedule-specific */
-        :root { /* ... same variables ... */ }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background: var(--bg); color: var(--text); font-family: var(--font); }
-        .header { /* same as index */ }
-        /* ... copy header, sidebar, search overlay styles ... (see previous pages) */
-        /* For brevity, assume all global styles are included */
-        .schedule-page { padding: clamp(16px,3vw,30px) clamp(12px,3vw,40px); }
-        .day-tabs { display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 6px; }
-        .day-tab { padding: 8px 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; color: var(--text2); font-size: 0.85rem; cursor: pointer; white-space: nowrap; transition: var(--transition); }
-        .day-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-        .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 16px; }
-        .anime-card { /* same card style as search */ }
-        .loading-text { text-align:center; padding:30px; color:var(--text3); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airing Schedule — AnimeStream</title>
+  <meta name="description" content="Weekly anime airing schedule.">
+  <style>
+    :root {
+      --bg: #050505; --bg-elevated: #0f0f0f; --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.08); --border: rgba(255,255,255,0.06);
+      --text: #f0f0f0; --text-secondary: #888; --accent: #a855f7; --accent-light: #c084fc;
+      --accent-glow: rgba(168,85,247,0.35); --radius: 16px; --radius-sm: 8px;
+      --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height:1.5; }
+    a { color:inherit; text-decoration:none; }
+    img { max-width:100%; display:block; }
+
+    /* Header */
+    .header { position:sticky; top:0; z-index:100; height:70px; background: rgba(5,5,5,0.85); backdrop-filter: blur(20px); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 4vw; }
+    .logo { font-size:1.6rem; font-weight:800; background: linear-gradient(135deg, var(--accent), var(--accent-light)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .nav-right { display:flex; gap:16px; align-items:center; }
+    .icon-btn { width:40px; height:40px; border-radius:50%; background: var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text); transition:var(--transition); }
+    .icon-btn:hover { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+
+    /* Sidebar */
+    .sidebar { position:fixed; top:0; left:-300px; width:300px; height:100vh; background: var(--bg-elevated); z-index:200; border-right:1px solid var(--border); transition: left 0.35s ease; padding:28px 20px; }
+    .sidebar.open { left:0; }
+    .sidebar-overlay { position:fixed; inset:0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); z-index:199; opacity:0; pointer-events:none; transition: opacity 0.35s; }
+    .sidebar-overlay.open { opacity:1; pointer-events:all; }
+    .sidebar-title { font-size:1.2rem; font-weight:700; margin-bottom:20px; color:var(--accent-light); }
+    .sidebar-link { display:block; padding:12px 14px; border-radius: var(--radius-sm); margin-bottom:6px; font-weight:500; transition:var(--transition); }
+    .sidebar-link:hover { background: var(--surface); color: var(--accent-light); }
+
+    /* Day Tabs */
+    .tabs { display:flex; gap:8px; overflow-x:auto; padding: 30px 4vw 20px; max-width:1200px; margin:0 auto; scrollbar-width:none; }
+    .tabs::-webkit-scrollbar { display:none; }
+    .tab {
+      padding: 10px 20px; border-radius: 100px; font-weight:600; font-size:0.9rem;
+      cursor:pointer; border:1px solid var(--border); background: var(--surface); color:var(--text);
+      transition: var(--transition); white-space:nowrap;
+    }
+    .tab:hover { background: var(--surface-hover); border-color: var(--accent); }
+    .tab.active { background: var(--accent); border-color: var(--accent); color:#fff; box-shadow: 0 0 16px var(--accent-glow); }
+
+    /* Schedule Grid */
+    .schedule-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:18px; max-width:1200px; margin:0 auto; padding: 0 4vw 40px; }
+    .sched-card {
+      background: var(--surface); border:1px solid var(--border); border-radius: var(--radius);
+      padding:18px; display:flex; gap:14px; transition: var(--transition); cursor:pointer;
+    }
+    .sched-card:hover { background: var(--surface-hover); border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 10px 30px rgba(168,85,247,0.15); }
+    .sched-img { width:90px; height:130px; object-fit:cover; border-radius: var(--radius-sm); border:1px solid var(--border); flex-shrink:0; }
+    .sched-info { flex:1; }
+    .sched-title { font-weight:700; font-size:0.95rem; line-height:1.3; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .sched-meta { font-size:0.82rem; color:var(--text-secondary); margin-bottom:4px; }
+    .sched-time { font-size:0.8rem; color:var(--accent-light); font-weight:600; margin-top:6px; }
+
+    /* Footer */
+    .footer { border-top:1px solid var(--border); padding: 50px 4vw 30px; background: var(--bg-elevated); margin-top:20px; }
+    .footer-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; color: var(--text-secondary); font-size:0.82rem; }
+
+    @media (max-width: 640px) { .schedule-grid { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
-    <header class="header" id="header">
-        <div class="header-left">
-            <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
-            <a href="index.html" class="logo">Anime<span>Stream</span></a>
-        </div>
-        <div class="header-right">
-            <button class="search-trigger" id="searchTrigger">🔍</button>
-        </div>
-    </header>
-    <!-- Sidebar & search overlay identical to previous -->
-    <main class="schedule-page">
-        <div class="day-tabs" id="dayTabs">
-            <button class="day-tab active" data-day="monday">Monday</button>
-            <button class="day-tab" data-day="tuesday">Tuesday</button>
-            <button class="day-tab" data-day="wednesday">Wednesday</button>
-            <button class="day-tab" data-day="thursday">Thursday</button>
-            <button class="day-tab" data-day="friday">Friday</button>
-            <button class="day-tab" data-day="saturday">Saturday</button>
-            <button class="day-tab" data-day="sunday">Sunday</button>
-        </div>
-        <div class="schedule-grid" id="scheduleGrid"></div>
-        <div class="loading-text" id="loadingMsg">Loading...</div>
-    </main>
 
-    <script>
-        (function() {
-            // Include cacheManager & apiManager (same as before)
-            const cacheManager = {
-                TTL:30*60*1000, get(k){try{const i=localStorage.getItem('as_'+k);if(!i)return null;const{data,t}=JSON.parse(i);if(Date.now()-t>this.TTL){localStorage.removeItem('as_'+k);return null;}return data;}catch(e){return null;}}, set(k,d){try{localStorage.setItem('as_'+k,JSON.stringify({data:d,timestamp:Date.now()}));}catch(e){}}
-            };
-            const apiManager = {
-                queue:[],inProgress:false,delay:350,
-                async fetchWithRetry(url,r=2){for(let i=0;i<=r;i++){try{const res=await fetch(url);if(res.status===429){await new Promise(r=>setTimeout(r,1000*(i+1)));continue;}if(!res.ok)throw new Error(`HTTP ${res.status}`);return await res.json();}catch(e){if(i===r)throw e;await new Promise(r=>setTimeout(r,800*(i+1)));}}},
-                async enqueue(url,ck=null){if(ck){const c=cacheManager.get(ck);if(c)return c;}return new Promise((resolve,reject)=>{this.queue.push({url,ck,resolve,reject});this.processQueue();});},
-                async processQueue(){if(this.inProgress||this.queue.length===0)return;this.inProgress=true;while(this.queue.length>0){const{url,ck,resolve,reject}=this.queue.shift();try{const d=await this.fetchWithRetry(url);if(ck)cacheManager.set(ck,d);resolve(d);}catch(e){reject(e);}await new Promise(r=>setTimeout(r,this.delay));}this.inProgress=false;}
-            };
+  <!-- Header -->
+  <header class="header">
+    <button class="icon-btn" id="menuBtn" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+    <a href="index.html" class="logo">AnimeStream</a>
+    <div class="nav-right">
+      <a href="index.html" class="icon-btn" aria-label="Home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      </a>
+    </div>
+  </header>
 
-            // UI (sidebar, search overlay, back to top) — same initialization code, omitted for brevity
-            // ... (implement similar to search.html)
+  <!-- Sidebar -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-title">Menu</div>
+    <a href="index.html" class="sidebar-link">🏠 Home</a>
+    <a href="search.html" class="sidebar-link">🔍 Search</a>
+    <a href="creator.html" class="sidebar-link">👤 Creator</a>
+  </nav>
 
-            const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-            let currentDay = 'monday';
+  <!-- Tabs -->
+  <div class="tabs" id="dayTabs"></div>
 
-            const grid = document.getElementById('scheduleGrid');
-            const loadingMsg = document.getElementById('loadingMsg');
+  <!-- Grid -->
+  <div class="schedule-grid" id="scheduleGrid"></div>
 
-            async function loadDay(day){
-                grid.innerHTML = ''; loadingMsg.style.display='block';
-                try{
-                    const data = await apiManager.enqueue(`https://api.jikan.moe/v4/schedules?filter=${day}&limit=20&sfw=true`, `schedule_${day}`);
-                    if(data && data.data && data.data.length){
-                        const cards = data.data.map(a=>`
-                            <div class="anime-card" onclick="window.location.href='anime.html?id=${a.mal_id}'">
-                                <div class="card-img"><img src="${a.images.jpg.large_image_url}" alt="${a.title}" loading="lazy"></div>
-                                <div class="card-info"><h4>${a.title}</h4><div class="meta">⭐${a.score||'?'} 📺${a.episodes||'?'}</div></div>
-                            </div>
-                        `).join('');
-                        grid.innerHTML = cards;
-                    } else {
-                        grid.innerHTML = '<div style="padding:20px;color:#777;">No anime found for this day.</div>';
-                    }
-                }catch(e){ grid.innerHTML = '<div style="padding:20px;color:#ef4444;">Failed to load schedule.</div>'; }
-                loadingMsg.style.display='none';
-            }
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-bottom">
+      <span>© 2026 AnimeStream. All rights reserved.</span>
+      <span>Built with Jikan API</span>
+    </div>
+  </footer>
 
-            // Tab switching
-            document.getElementById('dayTabs').addEventListener('click', (e)=>{
-                const tab = e.target.closest('.day-tab');
-                if(!tab) return;
-                document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));
-                tab.classList.add('active');
-                currentDay = tab.dataset.day;
-                loadDay(currentDay);
-            });
+  <script>
+    const API = 'https://api.jikan.moe/v4';
+    const days = [
+      {key:'monday', label:'Mon'}, {key:'tuesday', label:'Tue'}, {key:'wednesday', label:'Wed'},
+      {key:'thursday', label:'Thu'}, {key:'friday', label:'Fri'}, {key:'saturday', label:'Sat'}, {key:'sunday', label:'Sun'}
+    ];
+    let currentDay = 'monday';
 
-            loadDay('monday');
-        })();
-    </script>
+    async function fetchJikan(endpoint) {
+      try { await new Promise(r=>setTimeout(r,350)); const res=await fetch(API+endpoint); if(!res.ok) throw new Error(res.status); return (await res.json()).data; }
+      catch(e){ console.error(e); return null; }
+    }
+
+    /* Sidebar */
+    const sidebar=document.getElementById('sidebar'), sidebarOverlay=document.getElementById('sidebarOverlay');
+    function toggleSidebar(){ sidebar.classList.toggle('open'); sidebarOverlay.classList.toggle('open'); }
+    document.getElementById('menuBtn').addEventListener('click', toggleSidebar);
+    sidebarOverlay.addEventListener('click', toggleSidebar);
+
+    /* Tabs */
+    const tabsContainer = document.getElementById('dayTabs');
+    tabsContainer.innerHTML = days.map(d => `<button class="tab ${d.key===currentDay?'active':''}" onclick="switchDay('${d.key}')">${d.label}</button>`).join('');
+
+    window.switchDay = function(day) {
+      currentDay = day;
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase().includes(day.substring(0,3))));
+      loadSchedule();
+    };
+
+    async function loadSchedule() {
+      const grid = document.getElementById('scheduleGrid');
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:40px;">Loading...</div>';
+      const data = await fetchJikan(`/schedules?filter=${currentDay}&limit=25`);
+      if (!data || !data.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:40px;">No anime scheduled for this day.</div>';
+        return;
+      }
+      grid.innerHTML = data.map(a => `
+        <a href="anime.html?id=${a.mal_id}" class="sched-card">
+          <img class="sched-img" src="${a.images.jpg.image_url}" alt="${a.title}" loading="lazy">
+          <div class="sched-info">
+            <div class="sched-title">${a.title}</div>
+            <div class="sched-meta">${a.type||''} • ${a.episodes||'?'} eps</div>
+            <div class="sched-meta">Score: ${a.score||'N/A'}</div>
+            ${a.broadcast?.time ? `<div class="sched-time">🕐 ${a.broadcast.time} JST</div>` : ''}
+          </div>
+        </a>
+      `).join('');
+    }
+
+    loadSchedule();
+  </script>
 </body>
 </html>
