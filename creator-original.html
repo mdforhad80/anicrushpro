@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="About AnimeStream, deployment guide, and features.">
+<meta name="theme-color" content="#050505">
+<title>Creator - AnimeStream</title>
+<style>
+/* ==================== VARIABLES & RESET ==================== */
+:root {
+  --bg: #050505;
+  --surface: #0a0a0a;
+  --surface-2: #111111;
+  --surface-3: #1a1a1a;
+  --primary: #8b5cf6;
+  --primary-glow: rgba(139,92,246,0.35);
+  --secondary: #a78bfa;
+  --text: #f3f4f6;
+  --text-muted: #9ca3af;
+  --border: rgba(255,255,255,0.08);
+  --radius: 12px;
+  --radius-lg: 16px;
+  --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+ul, ol { list-style: none; }
+
+/* ==================== UTILITIES ==================== */
+.glass {
+  background: rgba(17,17,17,0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+}
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==================== HEADER ==================== */
+.header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 64px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(12px, 3vw, 32px);
+  transition: var(--transition);
+}
+.header.scrolled {
+  background: rgba(5,5,5,0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.menu-btn {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  transition: var(--transition);
+}
+.menu-btn:hover { background: var(--surface-2); }
+.menu-btn svg { width: 22px; height: 22px; stroke: var(--text); }
+.logo {
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  display: flex; align-items: center; gap: 8px;
+}
+.logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; color: #fff; font-size: 14px;
+}
+
+/* ==================== SIDEBAR ==================== */
+.sidebar-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1100;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.sidebar-overlay.active { opacity: 1; pointer-events: all; }
+.sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: min(280px, 80vw);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  z-index: 1101;
+  transform: translateX(-100%);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  display: flex; flex-direction: column;
+  padding: 20px;
+}
+.sidebar.active { transform: translateX(0); }
+.sidebar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.sidebar-close {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+}
+.sidebar-close:hover { background: var(--surface-2); }
+.sidebar-close svg { width: 20px; height: 20px; stroke: var(--text); }
+.sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.sidebar-nav a {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+.sidebar-nav a:hover, .sidebar-nav a.active {
+  background: rgba(139,92,246,0.12);
+  color: var(--primary);
+}
+.sidebar-nav a svg { width: 20px; height: 20px; stroke: currentColor; flex-shrink: 0; }
+
+/* ==================== CREATOR PAGE ==================== */
+.creator-page {
+  max-width: 900px;
+  margin: 80px auto 0;
+  padding: clamp(24px, 4vw, 48px) clamp(16px, 3vw, 32px);
+}
+
+/* Developer Card */
+.dev-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(32px, 5vw, 48px);
+  text-align: center;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+}
+.dev-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+.dev-avatar {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #fff;
+  box-shadow: 0 8px 30px var(--primary-glow);
+}
+.dev-name {
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.dev-role {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+.dev-social {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.dev-social a {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+.dev-social a:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-3px);
+}
+.dev-social a svg { width: 20px; height: 20px; stroke: var(--text-muted); }
+.dev-social a:hover svg { stroke: #fff; }
+
+/* Sections */
+.section-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(24px, 4vw, 32px);
+  margin-bottom: 24px;
+}
+.section-card h2 {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-card h2 svg { width: 22px; height: 22px; stroke: var(--primary); }
+.section-card p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.section-card p:last-child { margin-bottom: 0; }
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.feature-item {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: var(--transition);
+}
+.feature-item:hover {
+  border-color: var(--primary);
+  transform: translateY(-3px);
+}
+.feature-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: rgba(139,92,246,0.12);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+.feature-icon svg { width: 20px; height: 20px; stroke: var(--primary); }
+.feature-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.feature-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Code Block */
+.code-block {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+.code-block code { color: var(--secondary); }
+
+/* ==================== FOOTER ==================== */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: clamp(24px, 4vw, 40px) clamp(16px, 3vw, 32px);
+  text-align: center;
+  margin-top: 40px;
+}
+.footer-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.footer-social {
+  display: flex; justify-content: center; gap: 16px;
+}
+.footer-social a {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+.footer-social a:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+.footer-social a svg { width: 16px; height: 16px; stroke: var(--text-muted); }
+.footer-social a:hover svg { stroke: #fff; }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 640px) {
+  .features-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<!-- ==================== HEADER ==================== -->
+<header class="header" id="header">
+  <div class="header-left">
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="index.html" class="logo">
+      <div class="logo-icon">A</div>
+      <span class="text-gradient">AnimeStream</span>
+    </a>
+  </div>
+  <div class="header-right">
+    <a href="index.html" class="menu-btn" aria-label="Home">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </a>
+  </div>
+</header>
+
+<!-- ==================== SIDEBAR ==================== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <a href="index.html" class="logo"><div class="logo-icon">A</div><span class="text-gradient">AnimeStream</span></a>
+    <button class="sidebar-close" id="sidebarClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
+    <a href="search.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search</a>
+    <a href="schedule.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</a>
+    <a href="creator.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Creator</a>
+  </nav>
+</aside>
+
+<!-- ==================== CREATOR PAGE ==================== -->
+<div class="creator-page">
+
+  <!-- Developer Card -->
+  <div class="dev-card">
+    <div class="dev-avatar">A</div>
+    <div class="dev-name">AnimeStream Team</div>
+    <div class="dev-role">Open Source Anime Streaming Platform</div>
+    <div class="dev-social">
+      <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      </a>
+      <a href="https://twitter.com" target="_blank" rel="noopener" aria-label="Twitter">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+      </a>
+      <a href="https://discord.com" target="_blank" rel="noopener" aria-label="Discord">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="section-card">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Features
+    </h2>
+    <div class="features-grid">
+      <div class="feature-item">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <div class="feature-title">HD Streaming</div>
+        <div class="feature-desc">Watch anime in high quality with sub and dub options.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <div class="feature-title">Advanced Search</div>
+        <div class="feature-desc">Filter by genre, year, season, type, and sort options.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="feature-title">Weekly Schedule</div>
+        <div class="feature-desc">Track what anime airs each day of the week.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div class="feature-title">Anime Details</div>
+        <div class="feature-desc">Full info with characters, relations, and recommendations.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+        <div class="feature-title">Keyboard Shortcuts</div>
+        <div class="feature-desc">Navigate episodes and controls with keyboard.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+        <div class="feature-title">Mobile Optimized</div>
+        <div class="feature-desc">Fully responsive design for all screen sizes.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GitHub Pages Guide -->
+  <div class="section-card">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      Deploy on GitHub Pages
+    </h2>
+    <p>1. Create a new repository on GitHub.</p>
+    <p>2. Upload all 6 HTML files (<code>index.html</code>, <code>anime.html</code>, <code>watch.html</code>, <code>search.html</code>, <code>schedule.html</code>, <code>creator.html</code>) to the repository.</p>
+    <p>3. Go to <strong>Settings &rarr; Pages</strong> and select the branch you want to deploy (usually <code>main</code>).</p>
+    <p>4. Your site will be live at <code>https://yourusername.github.io/reponame/</code>.</p>
+  </div>
+
+  <!-- Cloudflare Pages Guide -->
+  <div class="section-card">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+      Deploy on Cloudflare Pages
+    </h2>
+    <p>1. Sign up for a free Cloudflare account at <a href="https://pages.cloudflare.com" target="_blank" rel="noopener" style="color:var(--primary);">pages.cloudflare.com</a>.</p>
+    <p>2. Create a new project and connect your GitHub repository, or upload the files directly.</p>
+    <p>3. Set the build output directory to the root (or <code>/</code>).</p>
+    <p>4. Cloudflare will automatically deploy your site with a global CDN.</p>
+  </div>
+
+  <!-- Tech Stack -->
+  <div class="section-card">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Tech Stack
+    </h2>
+    <p>This project is built with zero dependencies using only:</p>
+    <div class="features-grid" style="margin-top:12px;">
+      <div class="feature-item">
+        <div class="feature-title">HTML5</div>
+        <div class="feature-desc">Semantic markup with accessibility features.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-title">Vanilla CSS</div>
+        <div class="feature-desc">Custom properties, grid, flexbox, and animations.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-title">Vanilla JS</div>
+        <div class="feature-desc">No frameworks. Pure JavaScript with async/await.</div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-title">Jikan API</div>
+        <div class="feature-desc">Free MyAnimeList API for all anime data.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="footer">
+  <p class="footer-text">AnimeStream is a demo project for educational purposes. All anime data provided by Jikan API.</p>
+  <p class="footer-text">&copy; 2026 AnimeStream. Built with passion.</p>
+  <div class="footer-social">
+    <a href="creator.html" aria-label="Creator"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+    <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg></a>
+  </div>
+</footer>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script>
+(function() {
+  'use strict';
+
+  const MobileNav = {
+    sidebar: document.getElementById('sidebar'),
+    overlay: document.getElementById('sidebarOverlay'),
+    open() { this.sidebar.classList.add('active'); this.overlay.classList.add('active'); document.body.style.overflow = 'hidden'; },
+    close() { this.sidebar.classList.remove('active'); this.overlay.classList.remove('active'); document.body.style.overflow = ''; },
+    init() {
+      document.getElementById('menuBtn').addEventListener('click', () => this.open());
+      document.getElementById('sidebarClose').addEventListener('click', () => this.close());
+      this.overlay.addEventListener('click', () => this.close());
+    }
+  };
+
+  function initHeaderScroll() {
+    const header = document.getElementById('header');
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => { header.classList.toggle('scrolled', window.scrollY > 40); ticking = false; });
+        ticking = true;
+      }
+    }, { passive: true });
+  }
+
+  function initApp() {
+    initHeaderScroll();
+    MobileNav.init();
+  }
+
+  if (!window.__appInitialized) {
+    window.__appInitialized = true;
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
+    }
+  }
+})();
+</script>
+</body>
+</html>
