@@ -532,7 +532,7 @@ ul, ol { list-style: none; }
 }
 .slider-track::-webkit-scrollbar { display: none; }
 .slider-track.dragging { scroll-behavior: auto; cursor: grabbing; }
-.slider-track.dragging .anime-card { pointer-events: none; }
+.slider-track.dragging .anime-card { /* pointer-events handled by JS */ }
 .slider-arrow {
   position: absolute;
   top: 50%; transform: translateY(-50%);
@@ -1013,12 +1013,20 @@ ul, ol { list-style: none; }
     let isDown = false;
     let startX, scrollLeft;
     let dragStartX = 0;
+    let dragStartY = 0;
     let didDrag = false;
 
+    function isOnCard(e) {
+      return !!(e.target && e.target.closest('.anime-card'));
+    }
+
     function onMouseDown(e) {
+      // If clicking directly on a card, don't start drag — let the <a> handle it
+      if (isOnCard(e)) return;
       isDown = true;
       didDrag = false;
       dragStartX = e.pageX;
+      dragStartY = e.pageY;
       track.classList.add('dragging');
       startX = e.pageX - track.offsetLeft;
       scrollLeft = track.scrollLeft;
@@ -1030,21 +1038,13 @@ ul, ol { list-style: none; }
     function onMouseUp(e) {
       isDown = false;
       track.classList.remove('dragging');
-      // If user dragged less than 5px, treat as a click — let the <a> handle it
-      if (!didDrag && Math.abs(e.pageX - dragStartX) < 5) {
-        const card = e.target.closest('.anime-card');
-        if (card) {
-          const href = card.getAttribute('href');
-          if (href && href !== '#') window.location.href = href;
-        }
-      }
     }
     function onMouseMove(e) {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - track.offsetLeft;
       const walk = (x - startX) * 1.5;
-      if (Math.abs(walk) > 3) didDrag = true;
+      if (Math.abs(walk) > 4) didDrag = true;
       track.scrollLeft = scrollLeft - walk;
     }
     function onWheel(e) {
@@ -1060,29 +1060,38 @@ ul, ol { list-style: none; }
     track.addEventListener('mousemove', onMouseMove);
     track.addEventListener('wheel', onWheel, { passive: false });
 
-    // Touch support with tap detection
+    // Touch support — only drag on empty space, tap cards navigate
     let touchStartX = 0;
     let touchScrollLeft = 0;
     let touchStartY = 0;
     let touchDragged = false;
+    let touchOnCard = false;
+
     track.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
       touchScrollLeft = track.scrollLeft;
       touchDragged = false;
+      touchOnCard = !!(e.target && e.target.closest('.anime-card'));
     }, { passive: true });
+
     track.addEventListener('touchmove', (e) => {
-      const touchX = e.touches[0].clientX;
-      const touchY = e.touches[0].clientY;
-      const diffX = Math.abs(touchStartX - touchX);
-      const diffY = Math.abs(touchStartY - touchY);
-      if (diffX > 6 || diffY > 6) touchDragged = true;
-      track.scrollLeft = touchScrollLeft + (touchStartX - touchX);
+      const t = e.touches[0];
+      const diffX = Math.abs(touchStartX - t.clientX);
+      const diffY = Math.abs(touchStartY - t.clientY);
+      if (diffX > 8 || diffY > 8) touchDragged = true;
+      // Only scroll if not touching a card, or if we've started dragging
+      if (!touchOnCard || touchDragged) {
+        track.scrollLeft = touchScrollLeft + (touchStartX - t.clientX);
+      }
     }, { passive: true });
+
     track.addEventListener('touchend', (e) => {
-      if (!touchDragged) {
-        const touch = e.changedTouches[0];
-        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      // If it was a tap on a card (no drag), navigate
+      if (touchOnCard && !touchDragged) {
+        const t = e.changedTouches[0];
+        const el = document.elementFromPoint(t.clientX, t.clientY);
         const card = el ? el.closest('.anime-card') : null;
         if (card) {
           const href = card.getAttribute('href');
@@ -1384,13 +1393,7 @@ ul, ol { list-style: none; }
         }
         this.suggestions.innerHTML = data.map(anime => renderAnimeCard(anime)).join('');
         // Re-bind click for dynamically added cards
-        this.suggestions.querySelectorAll('.anime-card').forEach(card => {
-          card.addEventListener('click', (e) => {
-            e.preventDefault();
-            const href = card.getAttribute('href');
-            if (href) window.location.href = href;
-          });
-        });
+        // Cards are <a> tags — no JS click binding needed, they navigate naturally
       } catch (e) {
         this.suggestions.innerHTML = '<div class="search-empty">Search failed. Try again.</div>';
       }
