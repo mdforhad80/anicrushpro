@@ -267,6 +267,14 @@ ul, ol { list-style: none; }
   pointer-events: all;
   z-index: 2;
 }
+/* Smooth fade-in when slides are first rendered */
+#heroSlides > .hero-slide:first-child {
+  animation: heroSlideFadeIn 0.6s ease forwards;
+}
+@keyframes heroSlideFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .hero-bg {
   position: absolute; inset: 0;
   background-size: cover;
@@ -402,6 +410,78 @@ ul, ol { list-style: none; }
 .hero-arrow svg { width: 20px; height: 20px; stroke: #fff; }
 .hero-arrow.prev { left: 0; }
 .hero-arrow.next { right: 0; }
+
+/* ==================== HERO SKELETON LOADING ==================== */
+.hero-skeleton-bg {
+  background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 200% 200%;
+  animation: heroSkeletonPulse 2s ease-in-out infinite;
+}
+@keyframes heroSkeletonPulse {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.hero-skeleton-badge {
+  width: 80px; height: 28px;
+  background: rgba(139,92,246,0.15);
+  border-radius: 20px;
+  margin-bottom: 16px;
+  animation: skeleton-loading 1.5s infinite;
+}
+.hero-skeleton-title {
+  width: 60%; height: clamp(36px, 4vw, 56px);
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  animation: skeleton-loading 1.5s infinite;
+}
+.hero-skeleton-meta {
+  width: 40%; height: 20px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  animation: skeleton-loading 1.5s infinite;
+}
+.hero-skeleton-genres {
+  display: flex; gap: 8px;
+  margin-bottom: 16px;
+}
+.hero-skeleton-genres span {
+  width: 60px; height: 22px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  animation: skeleton-loading 1.5s infinite;
+}
+.hero-skeleton-synopsis {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+  max-width: 600px;
+}
+.hero-skeleton-synopsis span {
+  height: 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+  animation: skeleton-loading 1.5s infinite;
+}
+.hero-skeleton-synopsis span:nth-child(1) { width: 100%; }
+.hero-skeleton-synopsis span:nth-child(2) { width: 85%; }
+.hero-skeleton-synopsis span:nth-child(3) { width: 60%; }
+.hero-skeleton-buttons {
+  display: flex; gap: 12px;
+}
+.hero-skeleton-buttons span {
+  width: 140px; height: 44px;
+  background: rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  animation: skeleton-loading 1.5s infinite;
+}
+.hero-skeleton-buttons span:nth-child(2) {
+  width: 100px;
+  background: rgba(255,255,255,0.04);
+}
 
 /* ==================== WIDGET SECTIONS ==================== */
 .section {
@@ -614,7 +694,7 @@ ul, ol { list-style: none; }
   }
 }
 </style>
-<base">
+<base target="_blank">
 </head>
 <body>
 
@@ -928,13 +1008,17 @@ ul, ol { list-style: none; }
   function initSlider(trackId) {
     const track = document.getElementById(trackId);
     if (!track) return;
-    if (SliderRegistry.has(trackId)) return; // Prevent duplicate init
+    if (SliderRegistry.has(trackId)) return;
 
     let isDown = false;
     let startX, scrollLeft;
+    let dragStartX = 0;
+    let didDrag = false;
 
     function onMouseDown(e) {
       isDown = true;
+      didDrag = false;
+      dragStartX = e.pageX;
       track.classList.add('dragging');
       startX = e.pageX - track.offsetLeft;
       scrollLeft = track.scrollLeft;
@@ -943,15 +1027,24 @@ ul, ol { list-style: none; }
       isDown = false;
       track.classList.remove('dragging');
     }
-    function onMouseUp() {
+    function onMouseUp(e) {
       isDown = false;
       track.classList.remove('dragging');
+      // If user dragged less than 5px, treat as a click — let the <a> handle it
+      if (!didDrag && Math.abs(e.pageX - dragStartX) < 5) {
+        const card = e.target.closest('.anime-card');
+        if (card) {
+          const href = card.getAttribute('href');
+          if (href && href !== '#') window.location.href = href;
+        }
+      }
     }
     function onMouseMove(e) {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - track.offsetLeft;
       const walk = (x - startX) * 1.5;
+      if (Math.abs(walk) > 3) didDrag = true;
       track.scrollLeft = scrollLeft - walk;
     }
     function onWheel(e) {
@@ -967,17 +1060,35 @@ ul, ol { list-style: none; }
     track.addEventListener('mousemove', onMouseMove);
     track.addEventListener('wheel', onWheel, { passive: false });
 
-    // Touch support
+    // Touch support with tap detection
     let touchStartX = 0;
     let touchScrollLeft = 0;
+    let touchStartY = 0;
+    let touchDragged = false;
     track.addEventListener('touchstart', (e) => {
       touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
       touchScrollLeft = track.scrollLeft;
+      touchDragged = false;
     }, { passive: true });
     track.addEventListener('touchmove', (e) => {
       const touchX = e.touches[0].clientX;
-      const diff = touchStartX - touchX;
-      track.scrollLeft = touchScrollLeft + diff;
+      const touchY = e.touches[0].clientY;
+      const diffX = Math.abs(touchStartX - touchX);
+      const diffY = Math.abs(touchStartY - touchY);
+      if (diffX > 6 || diffY > 6) touchDragged = true;
+      track.scrollLeft = touchScrollLeft + (touchStartX - touchX);
+    }, { passive: true });
+    track.addEventListener('touchend', (e) => {
+      if (!touchDragged) {
+        const touch = e.changedTouches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const card = el ? el.closest('.anime-card') : null;
+        if (card) {
+          const href = card.getAttribute('href');
+          if (href && href !== '#') window.location.href = href;
+        }
+      }
     }, { passive: true });
 
     SliderRegistry.set(trackId, { track });
@@ -1013,8 +1124,27 @@ ul, ol { list-style: none; }
       const dotsContainer = document.getElementById('heroDots');
       if (!container || !dotsContainer) return;
 
-      // Show skeleton state or loading
-      container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);">Loading featured anime...</div>';
+      // Premium skeleton loading state — no text, maintains final height
+      container.innerHTML = `
+        <div class="hero-slide active" style="opacity:1;z-index:2;">
+          <div class="hero-bg hero-skeleton-bg"></div>
+          <div class="hero-overlay"></div>
+          <div class="hero-content">
+            <div class="hero-skeleton-badge"></div>
+            <div class="hero-skeleton-title"></div>
+            <div class="hero-skeleton-meta"></div>
+            <div class="hero-skeleton-genres">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="hero-skeleton-synopsis">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="hero-skeleton-buttons">
+              <span></span><span></span>
+            </div>
+          </div>
+        </div>
+      `;
 
       try {
         const res = await ApiEngine.fetchSafe(`${API_BASE}/top/anime?filter=airing&limit=12`);
