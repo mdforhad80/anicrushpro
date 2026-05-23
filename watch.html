@@ -462,6 +462,349 @@ body.theater-mode .comments-section {
 }
 #cusdis_thread {
   min-height: 200px;
+  width: 100% !important;
+}
+
+/* ========== CUSDIS DARK THEME OVERRIDES ========== */
+
+/* Root iframe container */
+#cusdis_thread iframe {
+  width: 100% !important;
+  min-height: 400px !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Cusdis widget root */
+.cusdis-widget,
+.cusdis-container,
+#cusdis_thread > div,
+#cusdis_thread [class*="cusdis"] {
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* All text */
+.cusdis-widget *,
+.cusdis-container *,
+#cusdis_thread *,
+#cusdis_thread [class*="cusdis"] * {
+  color: var(--text) !important;
+}
+
+/* Headings */
+.cusdis-widget h1,
+.cusdis-widget h2,
+.cusdis-widget h3,
+.cusdis-widget h4,
+.cusdis-widget h5,
+.cusdis-widget h6,
+#cusdis_thread h1,
+#cusdis_thread h2,
+#cusdis_thread h3,
+#cusdis_thread h4,
+#cusdis_thread h5,
+#cusdis_thread h6 {
+  color: var(--text) !important;
+  font-weight: 700 !important;
+}
+
+/* Paragraphs, spans, divs */
+.cusdis-widget p,
+.cusdis-widget span,
+.cusdis-widget div,
+#cusdis_thread p,
+#cusdis_thread span,
+#cusdis_thread div {
+  color: var(--text) !important;
+}
+
+/* Muted / secondary text */
+.cusdis-widget [class*="muted"],
+.cusdis-widget [class*="secondary"],
+.cusdis-widget [class*="time"],
+.cusdis-widget [class*="date"],
+.cusdis-widget time,
+#cusdis_thread [class*="muted"],
+#cusdis_thread [class*="secondary"],
+#cusdis_thread [class*="time"],
+#cusdis_thread [class*="date"],
+#cusdis_thread time {
+  color: var(--text-muted) !important;
+}
+
+/* Links */
+.cusdis-widget a,
+#cusdis_thread a {
+  color: var(--primary) !important;
+  text-decoration: none !important;
+  transition: var(--transition) !important;
+}
+.cusdis-widget a:hover,
+#cusdis_thread a:hover {
+  color: var(--secondary) !important;
+  text-decoration: underline !important;
+}
+
+/* ========== INPUT FIELDS ========== */
+.cusdis-widget input[type="text"],
+.cusdis-widget input[type="email"],
+.cusdis-widget input[type="url"],
+.cusdis-widget textarea,
+#cusdis_thread input[type="text"],
+#cusdis_thread input[type="email"],
+#cusdis_thread input[type="url"],
+#cusdis_thread textarea {
+  width: 100% !important;
+  padding: 12px 16px !important;
+  background: var(--surface-3) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  color: var(--text) !important;
+  font-size: 0.9rem !important;
+  font-family: inherit !important;
+  outline: none !important;
+  transition: var(--transition) !important;
+  box-sizing: border-box !important;
+}
+
+.cusdis-widget input::placeholder,
+.cusdis-widget textarea::placeholder,
+#cusdis_thread input::placeholder,
+#cusdis_thread textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.7 !important;
+}
+
+.cusdis-widget input:focus,
+.cusdis-widget textarea:focus,
+#cusdis_thread input:focus,
+#cusdis_thread textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow) !important;
+}
+
+/* Textarea specific */
+.cusdis-widget textarea,
+#cusdis_thread textarea {
+  min-height: 120px !important;
+  resize: vertical !important;
+  line-height: 1.5 !important;
+}
+
+/* ========== BUTTONS ========== */
+.cusdis-widget button,
+.cusdis-widget [type="submit"],
+.cusdis-widget [class*="btn"],
+#cusdis_thread button,
+#cusdis_thread [type="submit"],
+#cusdis_thread [class*="btn"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 10px 24px !important;
+  background: linear-gradient(135deg, var(--primary), #7c3aed) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--radius) !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+  transition: var(--transition) !important;
+  box-shadow: 0 4px 20px var(--primary-glow) !important;
+}
+
+.cusdis-widget button:hover,
+.cusdis-widget [type="submit"]:hover,
+#cusdis_thread button:hover,
+#cusdis_thread [type="submit"]:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 30px var(--primary-glow) !important;
+  filter: brightness(1.1) !important;
+}
+
+.cusdis-widget button:disabled,
+.cusdis-widget [type="submit"]:disabled,
+#cusdis_thread button:disabled,
+#cusdis_thread [type="submit"]:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Secondary / outline buttons */
+.cusdis-widget [class*="outline"],
+.cusdis-widget [class*="secondary"],
+#cusdis_thread [class*="outline"],
+#cusdis_thread [class*="secondary"] {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+.cusdis-widget [class*="outline"]:hover,
+#cusdis_thread [class*="outline"]:hover {
+  background: rgba(139,92,246,0.1) !important;
+  border-color: var(--primary) !important;
+}
+
+/* ========== COMMENT CARDS ========== */
+.cusdis-widget [class*="comment"],
+.cusdis-widget [class*="message"],
+.cusdis-widget [class*="card"],
+#cusdis_thread [class*="comment"],
+#cusdis_thread [class*="message"],
+#cusdis_thread [class*="card"] {
+  background: var(--surface-3) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  padding: 14px 16px !important;
+  margin-bottom: 12px !important;
+  transition: var(--transition) !important;
+}
+
+.cusdis-widget [class*="comment"]:hover,
+#cusdis_thread [class*="comment"]:hover {
+  border-color: rgba(139,92,246,0.3) !important;
+}
+
+/* Comment author name */
+.cusdis-widget [class*="author"],
+.cusdis-widget [class*="name"],
+.cusdis-widget [class*="user"],
+#cusdis_thread [class*="author"],
+#cusdis_thread [class*="name"],
+#cusdis_thread [class*="user"] {
+  color: var(--text) !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+}
+
+/* Comment body text */
+.cusdis-widget [class*="body"],
+.cusdis-widget [class*="content"],
+.cusdis-widget [class*="text"],
+#cusdis_thread [class*="body"],
+#cusdis_thread [class*="content"],
+#cusdis_thread [class*="text"] {
+  color: var(--text-muted) !important;
+  font-size: 0.85rem !important;
+  line-height: 1.6 !important;
+}
+
+/* Reply button */
+.cusdis-widget [class*="reply"],
+#cusdis_thread [class*="reply"] {
+  font-size: 0.75rem !important;
+  color: var(--primary) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 4px 8px !important;
+  box-shadow: none !important;
+}
+
+.cusdis-widget [class*="reply"]:hover,
+#cusdis_thread [class*="reply"]:hover {
+  color: var(--secondary) !important;
+  background: rgba(139,92,246,0.1) !important;
+  border-radius: 6px !important;
+  transform: none !important;
+}
+
+/* ========== FORM / REPLY AREA ========== */
+.cusdis-widget form,
+.cusdis-widget [class*="form"],
+#cusdis_thread form,
+#cusdis_thread [class*="form"] {
+  background: var(--surface-3) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  padding: 16px !important;
+  margin-bottom: 16px !important;
+}
+
+.cusdis-widget [class*="input-group"],
+#cusdis_thread [class*="input-group"] {
+  margin-bottom: 12px !important;
+}
+
+.cusdis-widget label,
+#cusdis_thread label {
+  display: block !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  margin-bottom: 6px !important;
+}
+
+/* ========== SCROLLBAR ========== */
+.cusdis-widget ::-webkit-scrollbar,
+#cusdis_thread ::-webkit-scrollbar {
+  width: 6px !important;
+}
+.cusdis-widget ::-webkit-scrollbar-track,
+#cusdis_thread ::-webkit-scrollbar-track {
+  background: var(--surface-2) !important;
+  border-radius: 3px !important;
+}
+.cusdis-widget ::-webkit-scrollbar-thumb,
+#cusdis_thread ::-webkit-scrollbar-thumb {
+  background: var(--surface-3) !important;
+  border-radius: 3px !important;
+}
+.cusdis-widget ::-webkit-scrollbar-thumb:hover,
+#cusdis_thread ::-webkit-scrollbar-thumb:hover {
+  background: var(--primary) !important;
+}
+
+/* ========== LOADING / EMPTY STATES ========== */
+.cusdis-widget [class*="loading"],
+.cusdis-widget [class*="spinner"],
+#cusdis_thread [class*="loading"],
+#cusdis_thread [class*="spinner"] {
+  color: var(--text-muted) !important;
+}
+
+.cusdis-widget [class*="empty"],
+.cusdis-widget [class*="no-comments"],
+#cusdis_thread [class*="empty"],
+#cusdis_thread [class*="no-comments"] {
+  color: var(--text-muted) !important;
+  text-align: center !important;
+  padding: 32px !important;
+  font-size: 0.9rem !important;
+}
+
+/* ========== MOBILE RESPONSIVE ========== */
+@media (max-width: 640px) {
+  .comments-section {
+    padding: 14px !important;
+  }
+  .cusdis-widget input,
+  .cusdis-widget textarea,
+  #cusdis_thread input,
+  #cusdis_thread textarea {
+    padding: 10px 12px !important;
+    font-size: 0.85rem !important;
+  }
+  .cusdis-widget button,
+  #cusdis_thread button {
+    padding: 8px 18px !important;
+    font-size: 0.8rem !important;
+    width: 100% !important;
+  }
+  .cusdis-widget [class*="comment"],
+  #cusdis_thread [class*="comment"] {
+    padding: 10px 12px !important;
+  }
+  .cusdis-widget form,
+  #cusdis_thread form {
+    padding: 12px !important;
+  }
 }
 
 /* ==================== FOOTER ==================== */
