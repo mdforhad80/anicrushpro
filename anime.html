@@ -967,8 +967,6 @@ ul, ol { list-style: none; }
     const score = anime.score ? anime.score.toFixed(1) : '';
     const episodes = anime.episodes || (anime.type === 'Movie' ? '1' : '?');
     const type = sanitize(anime.type || 'TV');
-    const status = sanitize(anime.status || '');
-    const year = anime.year || (anime.aired && anime.aired.string ? anime.aired.string.split(' ').pop() : '');
     return `
       <a href="anime.html?id=${malId}" class="anime-card fade-in">
         <div class="card-img-wrap">
@@ -983,10 +981,6 @@ ul, ol { list-style: none; }
         </div>
         <div class="card-info">
           <div class="card-title clamp-2">${title}</div>
-          <div class="card-meta">
-            <span>${status}</span>
-            ${year ? `<span class="dot"></span><span>${year}</span>` : ''}
-          </div>
         </div>
       </a>
     `;
