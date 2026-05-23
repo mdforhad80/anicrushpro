@@ -448,7 +448,7 @@ body.theater-mode .comments-section {
   color: var(--text-muted);
 }
 
-/* Comments UI */
+/* Cusdis Comments */
 .comments-section {
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -460,69 +460,8 @@ body.theater-mode .comments-section {
   font-weight: 700;
   margin-bottom: 16px;
 }
-.comment-box {
-  width: 100%;
-  padding: 12px 16px;
-  background: var(--surface-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 0.9rem;
-  outline: none;
-  resize: vertical;
-  min-height: 80px;
-  margin-bottom: 12px;
-}
-.comment-box:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-glow);
-}
-.comment-btn {
-  padding: 10px 20px;
-  background: var(--primary);
-  color: #fff;
-  border-radius: var(--radius);
-  font-weight: 700;
-  font-size: 0.85rem;
-  transition: var(--transition);
-}
-.comment-btn:hover { background: #7c3aed; }
-.comment-list {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.comment-item {
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  background: var(--surface-3);
-  border-radius: var(--radius);
-}
-.comment-avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 0.8rem; color: #fff;
-  flex-shrink: 0;
-}
-.comment-body { flex: 1; }
-.comment-user {
-  font-size: 0.85rem;
-  font-weight: 700;
-  margin-bottom: 2px;
-}
-.comment-time {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-.comment-text {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.5;
+#cusdis_thread {
+  min-height: 200px;
 }
 
 /* ==================== FOOTER ==================== */
@@ -656,21 +595,17 @@ body.theater-mode .comments-section {
       <div class="episode-grid" id="episodeGrid"></div>
     </div>
 
-    <!-- Comments UI -->
+    <!-- Cusdis Comments -->
     <div class="comments-section">
       <h3>Comments</h3>
-      <textarea class="comment-box" id="commentBox" placeholder="Write a comment..."></textarea>
-      <button class="comment-btn" id="commentBtn">Post Comment</button>
-      <div class="comment-list" id="commentList">
-        <div class="comment-item">
-          <div class="comment-avatar">G</div>
-          <div class="comment-body">
-            <div class="comment-user">Guest User</div>
-            <div class="comment-time">Just now</div>
-            <div class="comment-text">Great episode! Can't wait for the next one.</div>
-          </div>
-        </div>
-      </div>
+      <div id="cusdis_thread"
+        data-host="https://cusdis.com"
+        data-app-id="3a80b954-619a-465c-bdfe-eca981f5135c"
+        data-page-id=""
+        data-page-url=""
+        data-page-title=""
+      ></div>
+      <script async defer src="https://cusdis.com/js/cusdis.es.js"></script>
     </div>
   </div>
 
@@ -838,18 +773,54 @@ body.theater-mode .comments-section {
   }
 
   // ==================== EPISODES ====================
+  // Chunked episode rendering for performance with 1000+ episodes
+  const EP_CHUNK_SIZE = 100;
+  let renderedEpCount = 0;
+
   function renderEpisodes() {
     const grid = document.getElementById('episodeGrid');
     if (!grid) return;
     grid.innerHTML = '';
-    const max = Math.min(state.totalEps, 50);
-    for (let i = 1; i <= max; i++) {
+    renderedEpCount = 0;
+
+    // Render first chunk immediately
+    renderEpisodeChunk(1, Math.min(EP_CHUNK_SIZE, state.totalEps));
+
+    // Render remaining chunks lazily
+    if (state.totalEps > EP_CHUNK_SIZE) {
+      scheduleChunkRender(EP_CHUNK_SIZE + 1);
+    }
+  }
+
+  function renderEpisodeChunk(start, end) {
+    const grid = document.getElementById('episodeGrid');
+    if (!grid) return;
+
+    const fragment = document.createDocumentFragment();
+    const actualEnd = Math.min(end, state.totalEps);
+
+    for (let i = start; i <= actualEnd; i++) {
       const btn = document.createElement('button');
       btn.className = 'episode-btn' + (i === state.currentEp ? ' active' : '');
       btn.textContent = i;
+      btn.dataset.ep = i;
       btn.addEventListener('click', () => switchEpisode(i));
-      grid.appendChild(btn);
+      fragment.appendChild(btn);
     }
+
+    grid.appendChild(fragment);
+    renderedEpCount = actualEnd;
+  }
+
+  function scheduleChunkRender(start) {
+    if (start > state.totalEps) return;
+    requestAnimationFrame(() => {
+      renderEpisodeChunk(start, start + EP_CHUNK_SIZE - 1);
+      if (start + EP_CHUNK_SIZE <= state.totalEps) {
+        // Use setTimeout to yield to browser between chunks
+        setTimeout(() => scheduleChunkRender(start + EP_CHUNK_SIZE), 10);
+      }
+    });
   }
 
   function switchEpisode(ep) {
@@ -860,11 +831,43 @@ body.theater-mode .comments-section {
     url.searchParams.set('ep', ep);
     window.history.replaceState({}, '', url);
     loadPlayer();
-    renderEpisodes();
     updateSidebarInfo();
-    // Auto scroll active into view
-    const activeBtn = document.querySelector('.episode-btn.active');
-    if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    updateCusdis();
+
+    // Update active state without full re-render
+    const grid = document.getElementById('episodeGrid');
+    if (grid) {
+      grid.querySelectorAll('.episode-btn.active').forEach(b => b.classList.remove('active'));
+      const target = grid.querySelector(`.episode-btn[data-ep="${ep}"]`);
+      if (target) {
+        target.classList.add('active');
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      } else {
+        // Target not rendered yet, do a targeted render around it
+        ensureEpisodeVisible(ep);
+      }
+    }
+  }
+
+  // Ensure a specific episode button exists in DOM, render chunks around it if needed
+  function ensureEpisodeVisible(ep) {
+    const grid = document.getElementById('episodeGrid');
+    if (!grid) return;
+    if (grid.querySelector(`.episode-btn[data-ep="${ep}"]`)) return;
+
+    // Find which chunk contains this episode
+    const chunkStart = Math.floor((ep - 1) / EP_CHUNK_SIZE) * EP_CHUNK_SIZE + 1;
+    const chunkEnd = Math.min(chunkStart + EP_CHUNK_SIZE - 1, state.totalEps);
+
+    // Check if we need to render before or after current rendered range
+    renderEpisodeChunk(chunkStart, chunkEnd);
+
+    // Now try to activate
+    const target = grid.querySelector(`.episode-btn[data-ep="${ep}"]`);
+    if (target) {
+      target.classList.add('active');
+      target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
   }
 
   function nextEpisode() { switchEpisode(state.currentEp + 1); }
@@ -931,7 +934,9 @@ body.theater-mode .comments-section {
       const anime = (res && res.data) ? res.data : null;
       if (!anime) return;
       state.animeData = anime;
-      state.totalEps = anime.episodes || 12;
+
+      // Fetch accurate episode count from /episodes endpoint
+      await fetchEpisodeCount();
 
       // Update back button
       const backBtn = document.getElementById('backBtn');
@@ -948,11 +953,50 @@ body.theater-mode .comments-section {
 
       // Load player
       loadPlayer();
+      updateCusdis();
     } catch (e) {
       console.error(e);
+      state.totalEps = state.animeData && state.animeData.episodes ? state.animeData.episodes : 12;
       renderEpisodes();
       loadPlayer();
+      updateCusdis();
     }
+  }
+
+  // Fetch total episode count from Jikan /episodes with pagination
+  async function fetchEpisodeCount() {
+    let total = 0;
+    let page = 1;
+    let hasMore = true;
+    const maxPages = 20; // Safety limit for API calls (20 * 100 = 2000 eps max)
+
+    while (hasMore && page <= maxPages) {
+      try {
+        const res = await ApiEngine.fetchSafe(`${API_BASE}/anime/${state.malId}/episodes?page=${page}`);
+        const data = (res && res.data) ? res.data : [];
+        const pagination = (res && res.pagination) ? res.pagination : {};
+
+        if (!data.length) {
+          hasMore = false;
+          break;
+        }
+
+        total += data.length;
+        hasMore = pagination.has_next_page === true;
+        page++;
+      } catch (e) {
+        hasMore = false;
+      }
+    }
+
+    // Fallback to anime.episodes if API returned nothing
+    if (total === 0 && state.animeData && state.animeData.episodes) {
+      total = state.animeData.episodes;
+    }
+    // Ultimate fallback
+    if (total === 0) total = 12;
+
+    state.totalEps = total;
   }
 
   function updateSidebarInfo() {
@@ -1008,25 +1052,28 @@ body.theater-mode .comments-section {
     }
   }
 
-  // ==================== COMMENTS ====================
-  document.getElementById('commentBtn').addEventListener('click', () => {
-    const box = document.getElementById('commentBox');
-    const list = document.getElementById('commentList');
-    const text = box.value.trim();
-    if (!text) return;
-    const item = document.createElement('div');
-    item.className = 'comment-item fade-in';
-    item.innerHTML = `
-      <div class="comment-avatar">Y</div>
-      <div class="comment-body">
-        <div class="comment-user">You</div>
-        <div class="comment-time">Just now</div>
-        <div class="comment-text">${sanitize(text)}</div>
-      </div>
-    `;
-    list.insertBefore(item, list.firstChild);
-    box.value = '';
-  });
+  // ==================== CUSDIS COMMENTS ====================
+  function updateCusdis() {
+    const thread = document.getElementById('cusdis_thread');
+    if (!thread || !state.animeData) return;
+
+    const malId = state.malId;
+    const ep = state.currentEp;
+    const title = getTitle(state.animeData);
+
+    const pageId = `anime-${malId}-ep-${ep}`;
+    const pageUrl = window.location.href;
+    const pageTitle = `${title} - Episode ${ep}`;
+
+    thread.setAttribute('data-page-id', pageId);
+    thread.setAttribute('data-page-url', pageUrl);
+    thread.setAttribute('data-page-title', pageTitle);
+
+    // Trigger Cusdis re-render if already loaded
+    if (window.CUSDIS && window.CUSDIS.renderTo) {
+      window.CUSDIS.renderTo(thread);
+    }
+  }
 
   // ==================== MOBILE NAV ====================
   const MobileNav = {
