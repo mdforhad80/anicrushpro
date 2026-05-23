@@ -545,7 +545,7 @@ ul, ol { list-style: none; }
 }
 .slider-track::-webkit-scrollbar { display: none; }
 .slider-track.dragging { scroll-behavior: auto; cursor: grabbing; }
-.slider-track.dragging .anime-card { pointer-events: none; }
+
 .slider-arrow {
   position: absolute;
   top: 50%; transform: translateY(-50%);
@@ -929,19 +929,39 @@ ul, ol { list-style: none; }
     const track = document.getElementById(trackId);
     if (!track || SliderRegistry.has(trackId)) return;
     let isDown = false, startX, scrollLeft;
-    function onMouseDown(e) { isDown = true; track.classList.add('dragging'); startX = e.pageX - track.offsetLeft; scrollLeft = track.scrollLeft; }
+    function onMouseDown(e) {
+      if (e.target.closest('.anime-card')) return;
+      isDown = true;
+      track.classList.add('dragging');
+      startX = e.pageX - track.offsetLeft;
+      scrollLeft = track.scrollLeft;
+    }
     function onMouseLeave() { isDown = false; track.classList.remove('dragging'); }
     function onMouseUp() { isDown = false; track.classList.remove('dragging'); }
-    function onMouseMove(e) { if (!isDown) return; e.preventDefault(); const x = e.pageX - track.offsetLeft; const walk = (x - startX) * 1.5; track.scrollLeft = scrollLeft - walk; }
+    function onMouseMove(e) {
+      if (!isDown) return;
+      const x = e.pageX - track.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      track.scrollLeft = scrollLeft - walk;
+    }
     function onWheel(e) { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); track.scrollLeft += e.deltaY; } }
     track.addEventListener('mousedown', onMouseDown);
     track.addEventListener('mouseleave', onMouseLeave);
     track.addEventListener('mouseup', onMouseUp);
     track.addEventListener('mousemove', onMouseMove);
     track.addEventListener('wheel', onWheel, { passive: false });
-    let touchStartX = 0, touchScrollLeft = 0;
-    track.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; touchScrollLeft = track.scrollLeft; }, { passive: true });
-    track.addEventListener('touchmove', (e) => { const touchX = e.touches[0].clientX; const diff = touchStartX - touchX; track.scrollLeft = touchScrollLeft + diff; }, { passive: true });
+    let touchStartX = 0, touchScrollLeft = 0, touchOnCard = false;
+    track.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchScrollLeft = track.scrollLeft;
+      touchOnCard = !!(e.target && e.target.closest('.anime-card'));
+    }, { passive: true });
+    track.addEventListener('touchmove', (e) => {
+      if (touchOnCard) return;
+      const touchX = e.touches[0].clientX;
+      const diff = touchStartX - touchX;
+      track.scrollLeft = touchScrollLeft + diff;
+    }, { passive: true });
     SliderRegistry.set(trackId, { track });
   }
   function slideTrack(trackId, direction) {
