@@ -826,9 +826,9 @@ ul, ol { list-style: none; }
     </a>
   </div>
   <div class="header-right">
-    <button class="search-btn" id="searchBtn" aria-label="Search">
+        <a href="search.html" class="search-btn" aria-label="Search">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    </button>
+    </a>
   </div>
 </header>
 
@@ -1340,7 +1340,7 @@ ul, ol { list-style: none; }
   }
 
   // Chunked episode rendering for performance with 1000+ episodes
-  const EP_CHUNK_SIZE = 100;
+  const EP_CHUNK_SIZE = 10000;
   let renderedEpCount = 0;
 
   async function loadEpisodes(malId, totalEps) {
@@ -1612,7 +1612,7 @@ ul, ol { list-style: none; }
   async function initApp() {
     initHeaderScroll();
     MobileNav.init();
-    SearchOverlay.init();
+    // SearchOverlay.init(); // Disabled — search icon now links to external search page
     initTabs();
     await loadAnimeDetails();
   }
