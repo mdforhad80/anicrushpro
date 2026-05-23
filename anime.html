@@ -431,6 +431,19 @@ ul, ol { list-style: none; }
 .tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
 
 /* ==================== EPISODE LIST ==================== */
+#episodesList {
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3) var(--surface-2);
+}
+#episodesList::-webkit-scrollbar { width: 6px; }
+#episodesList::-webkit-scrollbar-track { background: var(--surface-2); border-radius: 3px; }
+#episodesList::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+#episodesList::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
 .episode-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -545,7 +558,7 @@ ul, ol { list-style: none; }
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 4px 4px 16px;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y pinch-zoom;
   cursor: grab;
 }
 .slider-track::-webkit-scrollbar { display: none; }
@@ -731,6 +744,19 @@ ul, ol { list-style: none; }
   border: none;
 }
 
+/* ==================== GRID FALLBACK ==================== */
+.grid-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .grid-section { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+}
+@media (max-width: 480px) {
+  .grid-section { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+
 /* ==================== FOOTER ==================== */
 .footer {
   border-top: 1px solid var(--border);
@@ -771,6 +797,9 @@ ul, ol { list-style: none; }
 @media (max-width: 480px) {
   .char-grid { grid-template-columns: repeat(2, 1fr); }
   .anime-stats { grid-template-columns: repeat(2, 1fr); }
+  .slider-arrow { width: 34px; height: 34px; }
+  .slider-arrow.prev { left: 2px; }
+  .slider-arrow.next { right: 2px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -780,6 +809,7 @@ ul, ol { list-style: none; }
   }
 }
 </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -879,10 +909,18 @@ ul, ol { list-style: none; }
     <div class="char-grid" id="charGrid"><div class="skeleton" style="height:180px;"></div><div class="skeleton" style="height:180px;"></div><div class="skeleton" style="height:180px;"></div></div>
   </div>
   <div class="tab-panel" id="tab-relations">
-    <div class="grid-section" id="grid-relations"></div>
+    <div class="slider-wrap" id="wrap-relations">
+      <div class="slider-track" id="slider-relations"></div>
+      <button class="slider-arrow prev" data-target="relations" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="slider-arrow next" data-target="relations" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
   </div>
   <div class="tab-panel" id="tab-recommendations">
-    <div class="grid-section" id="grid-recommendations"></div>
+    <div class="slider-wrap" id="wrap-recommendations">
+      <div class="slider-track" id="slider-recommendations"></div>
+      <button class="slider-arrow prev" data-target="recommendations" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="slider-arrow next" data-target="recommendations" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
   </div>
   <div class="tab-panel" id="tab-trailer">
     <div class="trailer-wrap" id="trailerWrap">
@@ -1301,56 +1339,120 @@ ul, ol { list-style: none; }
     }
   }
 
+  // Chunked episode rendering for performance with 1000+ episodes
+  const EP_CHUNK_SIZE = 100;
+  let renderedEpCount = 0;
+
   async function loadEpisodes(malId, totalEps) {
     const container = document.getElementById('episodesList');
     if (!container) return;
+
+    container.innerHTML = '';
+    renderedEpCount = 0;
+
+    // Try to fetch real episode data from API first
+    let apiEpisodes = [];
     try {
-      const res = await ApiEngine.fetchSafe(`${API_BASE}/anime/${malId}/episodes`);
-      const episodes = (res && res.data) ? res.data : [];
-      if (episodes && episodes.length) {
-        container.innerHTML = episodes.map(ep => `
-          <a href="watch.html?id=${malId}&ep=${ep.mal_id || ep.episode || 1}" class="episode-card fade-in">
-            <div class="episode-num">${ep.mal_id || ep.episode || 1}</div>
-            <div class="episode-info">
-              <div class="episode-title clamp-2">${sanitize(ep.title || 'Episode ' + (ep.mal_id || ep.episode || 1))}</div>
-              <div class="episode-date">${sanitize(ep.aired || '')}</div>
-            </div>
-            <div class="episode-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
-          </a>
-        `).join('');
-      } else {
-        // Generate generic episodes if API returns none
-        const count = totalEps || 12;
-        const max = Math.min(count, 24);
-        let html = '';
-        for (let i = 1; i <= max; i++) {
-          html += `
-            <a href="watch.html?id=${malId}&ep=${i}" class="episode-card fade-in">
-              <div class="episode-num">${i}</div>
-              <div class="episode-info">
-                <div class="episode-title">Episode ${i}</div>
-              </div>
-              <div class="episode-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
-            </a>
-          `;
+      // Paginate through all episode pages
+      let page = 1;
+      let hasMore = true;
+      while (hasMore && page <= 20) {
+        const res = await ApiEngine.fetchSafe(`${API_BASE}/anime/${malId}/episodes?page=${page}`);
+        const data = (res && res.data) ? res.data : [];
+        const pagination = (res && res.pagination) ? res.pagination : {};
+        if (data.length) {
+          apiEpisodes = apiEpisodes.concat(data);
         }
-        container.innerHTML = html;
+        hasMore = pagination.has_next_page === true;
+        page++;
       }
     } catch (e) {
-      const count = totalEps || 12;
-      const max = Math.min(count, 24);
-      let html = '';
-      for (let i = 1; i <= max; i++) {
-        html += `
-          <a href="watch.html?id=${malId}&ep=${i}" class="episode-card fade-in">
-            <div class="episode-num">${i}</div>
-            <div class="episode-info"><div class="episode-title">Episode ${i}</div></div>
-            <div class="episode-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
-          </a>
-        `;
-      }
-      container.innerHTML = html;
+      console.warn('Episode API failed, using generic list');
     }
+
+    if (apiEpisodes.length > 0) {
+      // Use API episode data - render all with chunked approach
+      renderEpisodeChunkFromApi(malId, apiEpisodes, 0, Math.min(EP_CHUNK_SIZE, apiEpisodes.length));
+      if (apiEpisodes.length > EP_CHUNK_SIZE) {
+        scheduleApiChunkRender(malId, apiEpisodes, EP_CHUNK_SIZE);
+      }
+    } else {
+      // Fallback: generate generic episode list
+      const count = totalEps || 12;
+      state.totalEps = count;
+      renderGenericEpisodeChunk(malId, 1, Math.min(EP_CHUNK_SIZE, count));
+      if (count > EP_CHUNK_SIZE) {
+        scheduleGenericChunkRender(malId, EP_CHUNK_SIZE + 1, count);
+      }
+    }
+  }
+
+  function renderEpisodeChunkFromApi(malId, episodes, start, end) {
+    const container = document.getElementById('episodesList');
+    if (!container) return;
+    const fragment = document.createDocumentFragment();
+    const actualEnd = Math.min(end, episodes.length);
+
+    for (let i = start; i < actualEnd; i++) {
+      const ep = episodes[i];
+      const epNum = ep.mal_id || ep.episode || (i + 1);
+      const card = document.createElement('a');
+      card.href = `watch.html?id=${malId}&ep=${epNum}`;
+      card.className = 'episode-card fade-in';
+      card.innerHTML = `
+        <div class="episode-num">${epNum}</div>
+        <div class="episode-info">
+          <div class="episode-title clamp-2">${sanitize(ep.title || 'Episode ' + epNum)}</div>
+          <div class="episode-date">${sanitize(ep.aired || '')}</div>
+        </div>
+        <div class="episode-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+      `;
+      fragment.appendChild(card);
+    }
+    container.appendChild(fragment);
+    renderedEpCount = actualEnd;
+  }
+
+  function scheduleApiChunkRender(malId, episodes, start) {
+    if (start >= episodes.length) return;
+    requestAnimationFrame(() => {
+      renderEpisodeChunkFromApi(malId, episodes, start, start + EP_CHUNK_SIZE);
+      if (start + EP_CHUNK_SIZE < episodes.length) {
+        setTimeout(() => scheduleApiChunkRender(malId, episodes, start + EP_CHUNK_SIZE), 10);
+      }
+    });
+  }
+
+  function renderGenericEpisodeChunk(malId, start, end) {
+    const container = document.getElementById('episodesList');
+    if (!container) return;
+    const fragment = document.createDocumentFragment();
+    const actualEnd = Math.min(end, state.totalEps);
+
+    for (let i = start; i <= actualEnd; i++) {
+      const card = document.createElement('a');
+      card.href = `watch.html?id=${malId}&ep=${i}`;
+      card.className = 'episode-card fade-in';
+      card.dataset.ep = i;
+      card.innerHTML = `
+        <div class="episode-num">${i}</div>
+        <div class="episode-info"><div class="episode-title">Episode ${i}</div></div>
+        <div class="episode-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+      `;
+      fragment.appendChild(card);
+    }
+    container.appendChild(fragment);
+    renderedEpCount = actualEnd;
+  }
+
+  function scheduleGenericChunkRender(malId, start, total) {
+    if (start > total) return;
+    requestAnimationFrame(() => {
+      renderGenericEpisodeChunk(malId, start, Math.min(start + EP_CHUNK_SIZE - 1, total));
+      if (start + EP_CHUNK_SIZE <= total) {
+        setTimeout(() => scheduleGenericChunkRender(malId, start + EP_CHUNK_SIZE, total), 10);
+      }
+    });
   }
 
   async function loadCharacters(malId) {
@@ -1382,7 +1484,7 @@ ul, ol { list-style: none; }
   }
 
   async function loadRelations(malId) {
-    const container = document.getElementById('grid-relations');
+    const container = document.getElementById('slider-relations');
     if (!container) return;
     try {
       const res = await ApiEngine.fetchSafe(`${API_BASE}/anime/${malId}/relations`);
@@ -1408,13 +1510,14 @@ ul, ol { list-style: none; }
         }
       }
       container.innerHTML = enriched.map(renderAnimeCard).join('');
+      initSlider('slider-relations');
     } catch (e) {
       container.innerHTML = '<div class="search-empty">Failed to load relations.</div>';
     }
   }
 
   async function loadRecommendations(malId) {
-    const container = document.getElementById('grid-recommendations');
+    const container = document.getElementById('slider-recommendations');
     if (!container) return;
     try {
       const res = await ApiEngine.fetchSafe(`${API_BASE}/anime/${malId}/recommendations`);
@@ -1432,6 +1535,7 @@ ul, ol { list-style: none; }
         } catch (e) { enriched.push(rec.entry); }
       }
       container.innerHTML = enriched.map(renderAnimeCard).join('');
+      initSlider('slider-recommendations');
     } catch (e) {
       container.innerHTML = '<div class="search-empty">Failed to load recommendations.</div>';
     }
