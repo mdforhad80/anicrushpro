@@ -1,613 +1,474 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="description" content="Weekly anime airing schedule. Find what airs today.">
-<meta name="theme-color" content="#050505">
-<title>Schedule - AnimeStream</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+<meta name="description" content="AniVerse - Weekly Anime Airing Schedule. See what's airing today and this week."/>
+<title>Anime Schedule - AniVerse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
-/* ==================== VARIABLES & RESET ==================== */
-:root {
-  --bg: #050505;
-  --surface: #0a0a0a;
-  --surface-2: #111111;
-  --surface-3: #1a1a1a;
-  --primary: #8b5cf6;
-  --primary-glow: rgba(139,92,246,0.35);
-  --secondary: #a78bfa;
-  --text: #f3f4f6;
-  --text-muted: #9ca3af;
-  --border: rgba(255,255,255,0.08);
-  --radius: 12px;
-  --radius-lg: 16px;
-  --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{overflow-x:hidden;max-width:100%;scroll-behavior:smooth}
+body{overflow-x:hidden;max-width:100%;background:#0a0a0f;color:#e8e8f0;font-family:'Nunito',sans-serif;min-height:100vh}
+:root{
+  --bg:#0a0a0f;--bg2:#0f0f1a;--card:#12121e;--card2:#1a1a2e;
+  --accent:#7c3aed;--accent2:#a855f7;--accent3:#c084fc;
+  --gold:#fbbf24;--green:#22c55e;--red:#ef4444;
+  --text:#e8e8f0;--text2:#a0a0b8;--text3:#6b6b88;
+  --border:rgba(124,58,237,0.2);--glass:rgba(255,255,255,0.04);
+  --glow:0 0 20px rgba(124,58,237,0.4);--glow2:0 0 40px rgba(124,58,237,0.15);
+  --radius:12px;--radius2:8px;--transition:0.3s cubic-bezier(0.4,0,0.2,1);--header-h:70px;
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
-  overflow-x: hidden;
-  max-width: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-img { max-width: 100%; height: auto; display: block; }
-a { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-ul, ol { list-style: none; }
+::-webkit-scrollbar{width:6px;height:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,var(--card2) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius2)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn 0.4s ease both}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.live-dot{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite;margin-right:6px}
 
-/* ==================== UTILITIES ==================== */
-.glass {
-  background: rgba(17,17,17,0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
-}
-.skeleton {
-  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  border-radius: var(--radius);
-}
-@keyframes skeleton-loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-.fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
-@keyframes fadeIn { to { opacity: 1; } }
-.text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+/* HEADER */
+#header{position:fixed;top:0;left:0;right:0;z-index:1000;height:var(--header-h);display:flex;align-items:center;padding:0 clamp(12px,3vw,28px);gap:clamp(8px,2vw,20px);background:linear-gradient(180deg,rgba(10,10,15,0.98),rgba(10,10,15,0.85));backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.h-left{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.hamburger{background:none;border:none;cursor:pointer;padding:8px;border-radius:8px;display:flex;flex-direction:column;gap:5px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;transition:var(--transition)}
+.hamburger:hover span{background:var(--accent2)}
+.h-center{flex:1;display:flex;justify-content:center;min-width:0}
+.logo{font-family:'Rajdhani',sans-serif;font-size:clamp(20px,4vw,28px);font-weight:700;text-decoration:none;color:var(--text);letter-spacing:2px;white-space:nowrap}
+.logo span{color:var(--accent2)}
+.h-right{display:flex;align-items:center;gap:clamp(6px,1.5vw,14px);flex-shrink:0}
+.h-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:8px;border-radius:8px;transition:var(--transition);display:flex;align-items:center;justify-content:center;min-width:36px;min-height:36px}
+.h-btn:hover{color:var(--accent2);background:var(--glass)}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nav-link{color:var(--text2);text-decoration:none;font-size:14px;font-weight:600;padding:6px 10px;border-radius:6px;transition:var(--transition);white-space:nowrap}
+.nav-link:hover,.nav-link.active{color:var(--accent2)}
+@media(max-width:768px){.nav-links{display:none}}
 
-/* ==================== HEADER ==================== */
-.header {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 64px;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 clamp(12px, 3vw, 32px);
-  transition: var(--transition);
-}
-.header.scrolled {
-  background: rgba(5,5,5,0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-}
-.header-left, .header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.menu-btn {
-  width: 40px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 10px;
-  transition: var(--transition);
-}
-.menu-btn:hover { background: var(--surface-2); }
-.menu-btn svg { width: 22px; height: 22px; stroke: var(--text); }
-.logo {
-  font-size: clamp(1.1rem, 2vw, 1.5rem);
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  display: flex; align-items: center; gap: 8px;
-}
-.logo-icon {
-  width: 32px; height: 32px;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 900; color: #fff; font-size: 14px;
-}
+/* SEARCH OVERLAY */
+#searchOverlay{position:fixed;inset:0;z-index:2000;background:rgba(10,10,15,0.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:flex;flex-direction:column;align-items:center;padding:clamp(60px,10vw,100px) clamp(12px,5vw,40px) 20px;opacity:0;pointer-events:none;transition:opacity 0.3s;overflow-y:auto;overflow-x:hidden;max-width:100vw}
+#searchOverlay.open{opacity:1;pointer-events:all}
+.search-close{position:fixed;top:20px;right:clamp(12px,4vw,28px);background:var(--glass);border:1px solid var(--border);color:var(--text);font-size:22px;cursor:pointer;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;transition:var(--transition);z-index:2001}
+.search-close:hover{background:var(--accent)}
+.search-box{width:100%;max-width:min(700px,calc(100vw - 24px));position:relative}
+.search-box input{width:100%;background:var(--card2);border:2px solid var(--border);border-radius:50px;padding:16px 60px 16px 24px;font-size:clamp(14px,2.5vw,18px);font-family:'Nunito',sans-serif;color:var(--text);outline:none;transition:var(--transition)}
+.search-box input:focus{border-color:var(--accent2);box-shadow:var(--glow)}
+.search-box input::placeholder{color:var(--text3)}
+.search-icon-btn{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:var(--accent);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:var(--transition)}
+#searchResults{width:100%;max-width:min(700px,calc(100vw - 24px));margin-top:12px;overflow-x:hidden}
+.search-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border-radius:var(--radius2);cursor:pointer;transition:var(--transition);text-decoration:none;color:var(--text);border:1px solid transparent;margin-bottom:8px}
+.search-item:hover{border-color:var(--border);background:var(--card2)}
+.search-item img{width:48px;height:68px;object-fit:cover;border-radius:6px;flex-shrink:0}
+.search-item-info h4{font-size:14px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:calc(100vw - 160px)}
+.search-item-info span{font-size:12px;color:var(--text2)}
+.search-msg{color:var(--text2);font-size:14px;text-align:center;padding:20px}
 
-/* ==================== SIDEBAR ==================== */
-.sidebar-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(4px);
-  z-index: 1100;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-.sidebar-overlay.active { opacity: 1; pointer-events: all; }
-.sidebar {
-  position: fixed; top: 0; left: 0; bottom: 0;
-  width: min(280px, 80vw);
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  z-index: 1101;
-  transform: translateX(-100%);
-  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
-  display: flex; flex-direction: column;
-  padding: 20px;
-}
-.sidebar.active { transform: translateX(0); }
-.sidebar-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 24px;
-}
-.sidebar-close {
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 8px;
-}
-.sidebar-close:hover { background: var(--surface-2); }
-.sidebar-close svg { width: 20px; height: 20px; stroke: var(--text); }
-.sidebar-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-.sidebar-nav a {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  transition: var(--transition);
-}
-.sidebar-nav a:hover, .sidebar-nav a.active {
-  background: rgba(139,92,246,0.12);
-  color: var(--primary);
-}
-.sidebar-nav a svg { width: 20px; height: 20px; stroke: currentColor; flex-shrink: 0; }
+/* SIDEBAR */
+#sidebar{position:fixed;top:0;left:0;bottom:0;width:min(280px,85vw);background:var(--bg2);border-right:1px solid var(--border);z-index:1500;transform:translateX(-100%);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);overflow-y:auto}
+#sidebar.open{transform:translateX(0)}
+#sideOverlay{position:fixed;inset:0;z-index:1400;background:rgba(0,0,0,0.7);opacity:0;pointer-events:none;transition:opacity 0.3s}
+#sideOverlay.open{opacity:1;pointer-events:all}
+.sidebar-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border)}
+.sidebar-close{background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:4px;border-radius:6px}
+.sidebar-nav{padding:16px 12px}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--radius2);color:var(--text2);text-decoration:none;font-size:14px;font-weight:600;transition:var(--transition);margin-bottom:4px}
+.sidebar-link:hover,.sidebar-link.active{color:var(--text);background:var(--glass);border-left:3px solid var(--accent2)}
 
-/* ==================== SCHEDULE PAGE ==================== */
-.schedule-page {
-  max-width: 1200px;
-  margin: 80px auto 0;
-  padding: clamp(24px, 4vw, 48px) clamp(16px, 3vw, 32px);
-}
-.schedule-title {
-  font-size: clamp(1.5rem, 3vw, 2.2rem);
-  font-weight: 800;
-  margin-bottom: 24px;
-  text-align: center;
-}
+main{padding-top:var(--header-h);overflow-x:hidden;min-height:100vh}
 
-/* Day Tabs */
-.day-tabs {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding-bottom: 4px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid var(--border);
-}
-.day-tabs::-webkit-scrollbar { display: none; }
-.day-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 20px;
-  border-radius: var(--radius) var(--radius) 0 0;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  white-space: nowrap;
-  transition: var(--transition);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  min-width: 80px;
-}
-.day-tab:hover { color: var(--text); background: var(--surface-2); }
-.day-tab.active {
-  color: var(--primary);
-  background: rgba(139,92,246,0.08);
-  border-bottom-color: var(--primary);
-}
-.day-tab .day-name { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-.day-tab .day-num { font-size: 1.1rem; }
+/* PAGE HERO */
+.page-hero{padding:clamp(28px,5vw,52px) clamp(12px,4vw,40px) clamp(16px,3vw,32px);background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);border-bottom:1px solid var(--border)}
+.page-hero-inner{max-width:900px}
+.page-hero h1{font-family:'Rajdhani',sans-serif;font-size:clamp(24px,5vw,40px);font-weight:700;margin-bottom:8px}
+.page-hero h1 span{color:var(--accent2)}
+.page-hero p{color:var(--text2);font-size:clamp(13px,2vw,15px)}
+.live-badge{display:inline-flex;align-items:center;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--green);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px;margin-bottom:12px}
 
-/* Schedule Grid */
-.schedule-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.schedule-card {
-  display: grid;
-  grid-template-columns: 80px 1fr auto;
-  gap: 16px;
-  align-items: center;
-  padding: 14px 16px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: var(--transition);
-}
-.schedule-card:hover {
-  background: var(--surface-3);
-  border-color: var(--primary);
-  transform: translateX(4px);
-}
-.schedule-time {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--primary);
-  text-align: center;
-}
-.schedule-info {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
-.schedule-thumb {
-  width: 60px;
-  aspect-ratio: 2/3;
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--surface-3);
-  flex-shrink: 0;
-}
-.schedule-thumb img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-}
-.schedule-text {
-  min-width: 0;
-}
-.schedule-name {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 4px;
-  line-height: 1.3;
-}
-.schedule-meta {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-.schedule-action {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.schedule-btn {
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  background: var(--primary);
-  color: #fff;
-  transition: var(--transition);
-  white-space: nowrap;
-}
-.schedule-btn:hover { background: #7c3aed; }
-.schedule-btn.secondary {
-  background: var(--surface-3);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-.schedule-btn.secondary:hover { background: var(--surface); }
+/* CURRENT DATE DISPLAY */
+.date-strip{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:clamp(10px,2vw,16px) clamp(12px,4vw,40px);background:var(--bg2);border-bottom:1px solid var(--border)}
+.date-today{font-size:14px;font-weight:700;color:var(--text)}
+.date-today span{color:var(--text3);font-weight:400;margin-left:6px}
+.timezone-note{font-size:11px;color:var(--text3)}
 
-/* Empty state */
-.schedule-empty {
-  text-align: center;
-  padding: 64px 16px;
-  color: var(--text-muted);
-  font-size: 1rem;
-}
+/* DAY TABS */
+.day-tabs-wrap{padding:clamp(12px,2vw,20px) clamp(12px,4vw,40px) 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.day-tabs-wrap::-webkit-scrollbar{display:none}
+.day-tabs{display:flex;gap:8px;width:max-content;min-width:100%}
+.day-tab{flex:1;min-width:clamp(80px,12vw,110px);padding:clamp(10px,1.5vw,14px) clamp(8px,2vw,16px);background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);cursor:pointer;transition:var(--transition);text-align:center;font-family:'Nunito',sans-serif;position:relative}
+.day-tab:hover{border-color:var(--accent);background:var(--card2)}
+.day-tab.active{background:var(--accent);border-color:var(--accent);box-shadow:var(--glow2)}
+.day-tab.today-tab{border-color:var(--accent3)}
+.day-tab.today-tab:not(.active){background:rgba(124,58,237,0.08)}
+.day-name{display:block;font-size:clamp(12px,1.8vw,14px);font-weight:800;color:inherit;letter-spacing:0.5px}
+.day-date{display:block;font-size:10px;color:var(--text3);margin-top:2px}
+.day-tab.active .day-date{color:rgba(255,255,255,0.7)}
+.day-count{position:absolute;top:-6px;right:-6px;background:var(--accent2);color:#fff;font-size:9px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.day-tab.active .day-count{background:rgba(255,255,255,0.25)}
+.today-indicator{display:block;width:6px;height:6px;background:var(--green);border-radius:50%;margin:4px auto 0;animation:pulse 1.5s infinite}
 
-/* ==================== FOOTER ==================== */
-.footer {
-  border-top: 1px solid var(--border);
-  padding: clamp(24px, 4vw, 40px) clamp(16px, 3vw, 32px);
-  text-align: center;
-  margin-top: 40px;
-}
-.footer-text {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-.footer-social {
-  display: flex; justify-content: center; gap: 16px;
-}
-.footer-social a {
-  width: 36px; height: 36px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  transition: var(--transition);
-}
-.footer-social a:hover {
-  background: var(--primary);
-  border-color: var(--primary);
-  transform: translateY(-2px);
-}
-.footer-social a svg { width: 16px; height: 16px; stroke: var(--text-muted); }
-.footer-social a:hover svg { stroke: #fff; }
+/* SCHEDULE CONTENT */
+.schedule-content{padding:clamp(12px,2vw,24px) clamp(12px,4vw,40px)}
+.schedule-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:clamp(12px,2vw,20px);flex-wrap:wrap;gap:8px}
+.sched-day-title{font-family:'Rajdhani',sans-serif;font-size:clamp(18px,3vw,26px);font-weight:700}
+.sched-count-badge{background:var(--card2);border:1px solid var(--border);padding:5px 14px;border-radius:20px;font-size:12px;color:var(--text2);font-weight:600}
 
-/* ==================== RESPONSIVE ==================== */
-@media (max-width: 640px) {
-  .schedule-card {
-    grid-template-columns: 60px 1fr;
-    gap: 12px;
-  }
-  .schedule-action {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
-  }
-  .schedule-thumb { width: 50px; }
-  .day-tab { padding: 10px 14px; min-width: 70px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* SCHEDULE GRID */
+.sched-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(240px,30vw,300px),1fr));gap:clamp(10px,2vw,16px)}
+.sched-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:clamp(12px,2vw,16px);display:flex;gap:12px;align-items:flex-start;transition:var(--transition);cursor:pointer;text-decoration:none;color:var(--text);position:relative;overflow:hidden}
+.sched-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);opacity:0;transition:var(--transition)}
+.sched-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.4),var(--glow2)}
+.sched-card:hover::before{opacity:1}
+.sched-card.today-card{border-color:rgba(124,58,237,0.4)}
+.sched-thumb{width:clamp(52px,8vw,68px);height:clamp(72px,11vw,96px);object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--card2)}
+.sched-info{flex:1;min-width:0}
+.sched-title{font-size:clamp(12px,1.8vw,14px);font-weight:700;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.4}
+.sched-time{font-size:11px;color:var(--accent3);font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.sched-meta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.sched-badge{padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;letter-spacing:0.3px}
+.sched-ep{background:rgba(124,58,237,0.2);color:var(--accent3);border:1px solid rgba(124,58,237,0.25)}
+.sched-score{background:rgba(251,191,36,0.12);color:var(--gold);border:1px solid rgba(251,191,36,0.2)}
+.sched-type{background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid rgba(255,255,255,0.08)}
+.sched-synopsis{font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.6}
+.sched-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.sched-watch-btn{background:var(--accent);color:#fff;border:none;padding:5px 12px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;transition:var(--transition);font-family:'Nunito',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.sched-watch-btn:hover{background:var(--accent2)}
+.sched-info-btn{background:var(--glass);color:var(--text2);border:1px solid var(--border);padding:5px 12px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;transition:var(--transition);font-family:'Nunito',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.sched-info-btn:hover{border-color:var(--accent);color:var(--text)}
+
+/* LOADING STATE */
+.sched-skeleton-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;gap:12px}
+.empty-day{text-align:center;padding:clamp(40px,8vw,80px) 20px;color:var(--text2)}
+.empty-day .empty-icon{font-size:48px;margin-bottom:12px;display:block}
+.empty-day h3{font-size:18px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.empty-day p{font-size:13px}
+
+footer{margin-top:40px;padding:24px clamp(12px,4vw,40px);border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:12px;background:var(--bg2)}
+.footer-logo{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--text);letter-spacing:2px}
+.footer-logo span{color:var(--accent2)}
+.footer-copy{font-size:12px;color:var(--text3);text-align:center}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:var(--radius2);font-size:13px;z-index:9999;opacity:0;transform:translateY(10px);transition:all 0.3s;pointer-events:none;max-width:calc(100vw - 48px)}
+#toast.show{opacity:1;transform:translateY(0)}
+
+@media(max-width:600px){
+  .sched-grid{grid-template-columns:1fr}
+  .day-tabs{gap:5px}
+  .day-tab{min-width:clamp(68px,22vw,90px);padding:10px 6px}
 }
 </style>
-<base target="_blank">
 </head>
 <body>
-
-<!-- ==================== HEADER ==================== -->
-<header class="header" id="header">
-  <div class="header-left">
-    <button class="menu-btn" id="menuBtn" aria-label="Open menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-    <a href="index.html" class="logo">
-      <div class="logo-icon">A</div>
-      <span class="text-gradient">AnimeStream</span>
-    </a>
+<header id="header">
+  <div class="h-left">
+    <button class="hamburger" id="menuBtn"><span></span><span></span><span></span></button>
   </div>
-  <div class="header-right">
-    <a href="index.html" class="menu-btn" aria-label="Home">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    </a>
+  <div class="h-center">
+    <a href="index.html" class="logo">Ani<span>Verse</span></a>
+  </div>
+  <div class="h-right">
+    <nav class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="search.html" class="nav-link">Browse</a>
+      <a href="schedule.html" class="nav-link active">Schedule</a>
+    </nav>
+    <button class="h-btn" id="searchBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
   </div>
 </header>
 
-<!-- ==================== SIDEBAR ==================== -->
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <a href="index.html" class="logo"><div class="logo-icon">A</div><span class="text-gradient">AnimeStream</span></a>
-    <button class="sidebar-close" id="sidebarClose" aria-label="Close menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+<div id="sideOverlay"></div>
+<nav id="sidebar">
+  <div class="sidebar-head">
+    <a href="index.html" class="logo">Ani<span>Verse</span></a>
+    <button class="sidebar-close" id="sideClose">✕</button>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html" class="sidebar-link">🏠 Home</a>
+    <a href="search.html" class="sidebar-link">🔍 Browse Anime</a>
+    <a href="schedule.html" class="sidebar-link active">📅 Schedule</a>
+    <a href="creator.html" class="sidebar-link">👨‍💻 Creator</a>
+  </div>
+</nav>
+
+<div id="searchOverlay">
+  <button class="search-close" id="searchClose">✕</button>
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search anime..." autocomplete="off"/>
+    <button class="search-icon-btn" id="searchGo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
   </div>
-  <nav class="sidebar-nav">
-    <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
-    <a href="search.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search</a>
-    <a href="schedule.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</a>
-    <a href="creator.html"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Creator</a>
-  </nav>
-</aside>
-
-<!-- ==================== SCHEDULE ==================== -->
-<div class="schedule-page">
-  <h1 class="schedule-title">Airing Schedule</h1>
-  <div class="day-tabs" id="dayTabs"></div>
-  <div class="schedule-grid" id="scheduleGrid">
-    <div class="skeleton" style="height:80px;"></div>
-    <div class="skeleton" style="height:80px;"></div>
-    <div class="skeleton" style="height:80px;"></div>
-  </div>
+  <div id="searchResults"></div>
 </div>
 
-<!-- ==================== FOOTER ==================== -->
-<footer class="footer">
-  <p class="footer-text">AnimeStream is a demo project for educational purposes. All anime data provided by Jikan API.</p>
-  <p class="footer-text">&copy; 2026 AnimeStream. Built with passion.</p>
-  <div class="footer-social">
-    <a href="creator.html" aria-label="Creator"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
-    <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg></a>
+<main>
+  <!-- PAGE HERO -->
+  <div class="page-hero">
+    <div class="page-hero-inner">
+      <div class="live-badge"><span class="live-dot"></span>Live Schedule</div>
+      <h1>Weekly Anime <span>Schedule</span></h1>
+      <p>Track all currently airing anime. Updated daily from MyAnimeList via Jikan API.</p>
+    </div>
   </div>
+
+  <!-- DATE STRIP -->
+  <div class="date-strip">
+    <div class="date-today" id="currentDateDisplay">Loading…</div>
+    <div class="timezone-note">Times are in JST (Japan Standard Time)</div>
+  </div>
+
+  <!-- DAY TABS -->
+  <div class="day-tabs-wrap">
+    <div class="day-tabs" id="dayTabs"></div>
+  </div>
+
+  <!-- SCHEDULE CONTENT -->
+  <div class="schedule-content">
+    <div class="schedule-header">
+      <div class="sched-day-title" id="schedDayTitle">Loading…</div>
+      <div class="sched-count-badge" id="schedCountBadge">0 anime</div>
+    </div>
+    <div class="sched-grid" id="schedGrid">
+      <!-- Skeletons -->
+      ${Array.from({length:8},()=>`
+        <div class="sched-skeleton-card">
+          <div class="skeleton" style="width:64px;height:90px;flex-shrink:0"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+            <div class="skeleton" style="width:80%;height:14px"></div>
+            <div class="skeleton" style="width:50%;height:10px"></div>
+            <div class="skeleton" style="width:60%;height:10px"></div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-logo">Ani<span>Verse</span></div>
+  <p class="footer-copy">© 2025 AniVerse. Schedule data powered by Jikan API (MyAnimeList).</p>
 </footer>
+<div id="toast"></div>
 
-<!-- ==================== SCRIPTS ==================== -->
 <script>
-(function() {
-  'use strict';
+const API='https://api.jikan.moe/v4';
+const CACHE={};
+const CACHE_TTL=10*60*1000; // 10 min for schedule
 
-  const API_BASE = 'https://api.jikan.moe/v4';
-  const CACHE_TTL = 5 * 60 * 1000;
-  const RATE_DELAY = 400;
+const DAYS=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+const DAY_LABELS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const DAY_SHORT=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-  const ApiEngine = {
-    cache: {}, lastRequest: 0,
-    getCacheKey(url) { return 'cache_' + url; },
-    getCached(url) {
-      const key = this.getCacheKey(url);
-      const item = this.cache[key];
-      if (!item) {
-        try {
-          const raw = localStorage.getItem(key);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Date.now() - parsed.time < CACHE_TTL) { this.cache[key] = parsed; return parsed.data; }
-          }
-        } catch(e) {}
-        return null;
-      }
-      if (Date.now() - item.time < CACHE_TTL) return item.data;
-      return null;
-    },
-    setCache(url, data) {
-      const key = this.getCacheKey(url);
-      const payload = { data, time: Date.now() };
-      this.cache[key] = payload;
-      try { localStorage.setItem(key, JSON.stringify(payload)); } catch(e) {}
-    },
-    async fetchWithTimeout(url, timeout = 10000) {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), timeout);
-      try {
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(id);
-        return response;
-      } catch (e) { clearTimeout(id); throw e; }
-    },
-    async fetch(url, retries = 3) {
-      const cached = this.getCached(url);
-      if (cached) return cached;
-      const now = Date.now();
-      const wait = Math.max(0, this.lastRequest + RATE_DELAY - now);
-      if (wait > 0) await new Promise(r => setTimeout(r, wait));
-      this.lastRequest = Date.now();
-      let lastError;
-      for (let i = 0; i < retries; i++) {
-        try {
-          if (i > 0) await new Promise(r => setTimeout(r, 1200 * i));
-          const response = await this.fetchWithTimeout(url);
-          if (!response.ok) throw new Error('HTTP ' + response.status);
-          const json = await response.json();
-          if (!json || !json.data) throw new Error('Invalid response');
-          this.setCache(url, json);
-          return json;
-        } catch (e) { lastError = e; }
-      }
-      throw lastError;
-    },
-    async fetchSafe(url, fallbackData = null) {
-      try { return await this.fetch(url); }
-      catch (e) { console.warn('API fetch failed:', url, e.message); return { data: fallbackData }; }
+let currentDay='monday';
+let allSchedule={}; // { monday:[...], tuesday:[...], ... }
+
+function showToast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+async function apiFetch(url,retries=3){
+  if(CACHE[url]&&Date.now()-CACHE[url].t<CACHE_TTL)return CACHE[url].d;
+  for(let i=0;i<retries;i++){
+    try{
+      const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),12000);
+      const r=await fetch(url,{signal:ctrl.signal});clearTimeout(tid);
+      if(!r.ok)throw new Error(`HTTP ${r.status}`);
+      const d=await r.json();CACHE[url]={d,t:Date.now()};return d;
+    }catch(e){if(i<retries-1)await new Promise(r=>setTimeout(r,1500*(i+1)));else throw e;}
+  }
+}
+
+/* Get today's day name in lowercase */
+function getTodayDay(){
+  const days=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  return days[new Date().getDay()];
+}
+
+function formatCurrentDate(){
+  const now=new Date();
+  return now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+
+/* Build day tabs */
+function buildDayTabs(){
+  const today=getTodayDay();
+  const tabsEl=document.getElementById('dayTabs');
+  if(!tabsEl)return;
+
+  // Get dates for this week starting Monday
+  const now=new Date();
+  const dayOfWeek=now.getDay(); // 0=Sun
+  const mondayOffset=dayOfWeek===0?-6:1-dayOfWeek;
+  const monday=new Date(now);
+  monday.setDate(now.getDate()+mondayOffset);
+
+  tabsEl.innerHTML=DAYS.map((day,i)=>{
+    const d=new Date(monday);
+    d.setDate(monday.getDate()+i);
+    const dateStr=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const isToday=day===today;
+    const count=allSchedule[day]?.length||0;
+    return `<button class="day-tab${currentDay===day?' active':''}${isToday?' today-tab':''}" 
+      data-day="${day}" onclick="switchDay('${day}')">
+      <span class="day-name">${DAY_SHORT[i]}</span>
+      <span class="day-date">${dateStr}</span>
+      ${isToday?'<span class="today-indicator"></span>':''}
+      ${count>0?`<span class="day-count">${count}</span>`:''}
+    </button>`;
+  }).join('');
+}
+
+/* Switch active day */
+function switchDay(day){
+  currentDay=day;
+  buildDayTabs();
+  renderSchedule(day);
+}
+
+/* Render schedule for a day */
+function renderSchedule(day){
+  const grid=document.getElementById('schedGrid');
+  const title=document.getElementById('schedDayTitle');
+  const countBadge=document.getElementById('schedCountBadge');
+  const idx=DAYS.indexOf(day);
+  const today=getTodayDay();
+  const isToday=day===today;
+
+  if(title){
+    title.innerHTML=`${isToday?'<span class="live-dot"></span>':''}${DAY_LABELS[idx]||day}${isToday?' <span style="font-size:13px;color:var(--green);font-weight:600">(Today)</span>':''}`;
+  }
+
+  const list=allSchedule[day]||[];
+  if(countBadge)countBadge.textContent=`${list.length} anime`;
+
+  if(!grid)return;
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-day" style="grid-column:1/-1">
+      <span class="empty-icon">📭</span>
+      <h3>No Anime Scheduled</h3>
+      <p>Nothing scheduled for ${DAY_LABELS[idx]} this season.</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML=list.map(a=>{
+    const img=a.images?.jpg?.image_url||a.images?.webp?.image_url||'';
+    const score=a.score?`<span class="sched-badge sched-score">★ ${a.score}</span>`:'';
+    const type=a.type?`<span class="sched-badge sched-type">${a.type}</span>`:'';
+    const eps=a.episodes?`<span class="sched-badge sched-ep">${a.episodes} EP</span>`:'<span class="sched-badge sched-ep">Ongoing</span>';
+    const syn=(a.synopsis||'').slice(0,120)+(a.synopsis?.length>120?'...':'');
+    const time=a.broadcast?.time?`⏰ ${a.broadcast.time} JST`:'⏰ Time TBA';
+    const isAiring=a.airing||false;
+    return `<div class="sched-card${isToday?' today-card':''} fade-in">
+      <img class="sched-thumb" src="${img}" alt="${a.title||'Unknown'}" loading="lazy" 
+        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 3 4%22%3E%3C/svg%3E'"/>
+      <div class="sched-info">
+        <div class="sched-title">${a.title||'Unknown'}</div>
+        <div class="sched-time">${isToday&&isAiring?'<span class="live-dot"></span>':''}${time}</div>
+        <div class="sched-meta">${type}${eps}${score}</div>
+        ${syn?`<div class="sched-synopsis">${syn}</div>`:''}
+        <div class="sched-actions">
+          <a href="watch.html?id=${a.mal_id}&ep=1" class="sched-watch-btn">▶ Watch</a>
+          <a href="anime.html?id=${a.mal_id}" class="sched-info-btn">ℹ Info</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* Show loading skeletons for a day */
+function showSkeletons(){
+  const grid=document.getElementById('schedGrid');
+  if(!grid)return;
+  grid.innerHTML=Array.from({length:6},()=>`
+    <div class="sched-skeleton-card">
+      <div class="skeleton" style="width:64px;height:90px;flex-shrink:0;border-radius:8px"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div class="skeleton" style="width:80%;height:14px"></div>
+        <div class="skeleton" style="width:40%;height:10px"></div>
+        <div class="skeleton" style="width:60%;height:10px"></div>
+        <div class="skeleton" style="width:50%;height:10px"></div>
+      </div>
+    </div>`).join('');
+}
+
+/* Load schedule for all days */
+async function loadSchedule(){
+  const today=getTodayDay();
+  currentDay=today;
+
+  // Update date display
+  const dateDisplay=document.getElementById('currentDateDisplay');
+  if(dateDisplay){dateDisplay.innerHTML=`Today: <span style="color:var(--text)">${formatCurrentDate()}</span>`;}
+
+  showSkeletons();
+  buildDayTabs(); // Build tabs before data (empty counts)
+
+  // Load all days in parallel using Promise.allSettled
+  const results=await Promise.allSettled(
+    DAYS.map(day=>apiFetch(`${API}/schedules?filter=${day}&sfw=true&limit=25`))
+  );
+
+  results.forEach((result,i)=>{
+    const day=DAYS[i];
+    if(result.status==='fulfilled'&&result.value?.data){
+      allSchedule[day]=result.value.data;
+    }else{
+      allSchedule[day]=[];
     }
-  };
+  });
 
-  function sanitize(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+  // Rebuild tabs with counts
+  buildDayTabs();
+
+  // If today has no data, try fetching just today explicitly
+  if(!allSchedule[today]||allSchedule[today].length===0){
+    try{
+      const d=await apiFetch(`${API}/schedules?filter=${today}&sfw=true`);
+      if(d?.data?.length)allSchedule[today]=d.data;
+    }catch(e){}
+    buildDayTabs();
   }
 
-  function getTitle(anime) {
-    return sanitize(anime.title_english || anime.title || 'Unknown');
-  }
+  renderSchedule(currentDay);
+}
 
-  function getImage(anime) {
-    if (!anime.images || !anime.images.jpg) return '';
-    return anime.images.jpg.image_url || anime.images.jpg.small_image_url || '';
-  }
+/* ===== SEARCH ===== */
+const searchOverlay=document.getElementById('searchOverlay');
+const searchInput=document.getElementById('searchInput');
+const searchResults=document.getElementById('searchResults');
+let searchTimer=null;
+function openSearch(){document.body.style.overflow='hidden';searchOverlay.classList.add('open');setTimeout(()=>searchInput?.focus(),200);}
+function closeSearch(){document.body.style.overflow='';searchOverlay.classList.remove('open');if(searchInput)searchInput.value='';if(searchResults)searchResults.innerHTML='';}
+document.getElementById('searchBtn')?.addEventListener('click',openSearch);
+document.getElementById('searchClose')?.addEventListener('click',closeSearch);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch();});
+searchInput?.addEventListener('input',()=>{
+  clearTimeout(searchTimer);const q=searchInput.value.trim();
+  if(q.length<2){searchResults.innerHTML='';return;}
+  searchResults.innerHTML='<div class="search-msg">Searching...</div>';
+  searchTimer=setTimeout(async()=>{
+    try{const d=await apiFetch(`${API}/anime?q=${encodeURIComponent(q)}&limit=8&sfw=true`);
+    const list=d.data||[];
+    if(!list.length){searchResults.innerHTML='<div class="search-msg">No results.</div>';return;}
+    searchResults.innerHTML=list.map(a=>`<a href="anime.html?id=${a.mal_id}" class="search-item" onclick="closeSearch()">
+      <img src="${a.images?.jpg?.image_url||''}" alt="${a.title}" onerror="this.style.display='none'"/>
+      <div class="search-item-info"><h4>${a.title||'Unknown'}</h4><span>${a.type||''} ${a.score?'★'+a.score:''}</span></div>
+    </a>`).join('');
+    }catch(e){searchResults.innerHTML='<div class="search-msg">Search failed.</div>';}
+  },400);
+});
+document.getElementById('searchGo')?.addEventListener('click',()=>{const q=searchInput?.value.trim();if(q)window.location.href=`search.html?q=${encodeURIComponent(q)}`;});
+searchInput?.addEventListener('keydown',e=>{if(e.key==='Enter'){const q=searchInput.value.trim();if(q)window.location.href=`search.html?q=${encodeURIComponent(q)}`;}});
 
-  // ==================== DAYS ====================
-  const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  const DAY_LABELS = { monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri', saturday: 'Sat', sunday: 'Sun' };
-  let currentDay = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+/* ===== SIDEBAR ===== */
+const sidebar=document.getElementById('sidebar');
+const sideOverlay=document.getElementById('sideOverlay');
+function openSide(){sidebar.classList.add('open');sideOverlay.classList.add('open');document.body.style.overflow='hidden';}
+function closeSide(){sidebar.classList.remove('open');sideOverlay.classList.remove('open');document.body.style.overflow='';}
+document.getElementById('menuBtn')?.addEventListener('click',openSide);
+document.getElementById('sideClose')?.addEventListener('click',closeSide);
+sideOverlay?.addEventListener('click',closeSide);
 
-  // ==================== TABS ====================
-  function renderTabs() {
-    const container = document.getElementById('dayTabs');
-    if (!container) return;
-    container.innerHTML = '';
-    DAYS.forEach(day => {
-      const tab = document.createElement('button');
-      tab.className = 'day-tab' + (day === currentDay ? ' active' : '');
-      tab.innerHTML = `<span class="day-name">${DAY_LABELS[day]}</span>`;
-      tab.addEventListener('click', () => {
-        currentDay = day;
-        renderTabs();
-        loadSchedule(day);
-      });
-      container.appendChild(tab);
-    });
-    // Scroll active into view
-    const active = container.querySelector('.day-tab.active');
-    if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-  }
-
-  // ==================== LOAD SCHEDULE ====================
-  async function loadSchedule(day) {
-    const grid = document.getElementById('scheduleGrid');
-    if (!grid) return;
-    grid.innerHTML = '<div class="skeleton" style="height:80px;"></div><div class="skeleton" style="height:80px;"></div><div class="skeleton" style="height:80px;"></div>';
-    try {
-      const res = await ApiEngine.fetchSafe(`${API_BASE}/schedules?filter=${day}&limit=25`);
-      const data = (res && res.data) ? res.data : [];
-      grid.innerHTML = '';
-      if (!data.length) {
-        grid.innerHTML = '<div class="schedule-empty">No anime scheduled for this day.</div>';
-        return;
-      }
-      data.forEach(item => {
-        const anime = item;
-        const malId = anime.mal_id || 0;
-        const img = getImage(anime) || '';
-        const title = getTitle(anime);
-        const time = sanitize(anime.broadcast && anime.broadcast.time ? anime.broadcast.time : 'TBA');
-        const type = sanitize(anime.type || 'TV');
-        const episodes = anime.episodes || '?';
-        const score = anime.score ? anime.score.toFixed(1) : '';
-        const card = document.createElement('div');
-        card.className = 'schedule-card fade-in';
-        card.innerHTML = `
-          <div class="schedule-time">${time}</div>
-          <div class="schedule-info">
-            <div class="schedule-thumb"><img src="${img}" alt="${title}" loading="lazy"></div>
-            <div class="schedule-text">
-              <div class="schedule-name clamp-2">${title}</div>
-              <div class="schedule-meta">${type} &bull; ${episodes} EP &bull; Score: ${score || 'N/A'}</div>
-            </div>
-          </div>
-          <div class="schedule-action">
-            <a href="watch.html?id=${malId}&ep=1" class="schedule-btn">Watch</a>
-            <a href="anime.html?id=${malId}" class="schedule-btn secondary">Details</a>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    } catch (e) {
-      grid.innerHTML = '<div class="schedule-empty">Failed to load schedule. Please refresh.</div>';
-    }
-  }
-
-  // ==================== MOBILE NAV ====================
-  const MobileNav = {
-    sidebar: document.getElementById('sidebar'),
-    overlay: document.getElementById('sidebarOverlay'),
-    open() { this.sidebar.classList.add('active'); this.overlay.classList.add('active'); document.body.style.overflow = 'hidden'; },
-    close() { this.sidebar.classList.remove('active'); this.overlay.classList.remove('active'); document.body.style.overflow = ''; },
-    init() {
-      document.getElementById('menuBtn').addEventListener('click', () => this.open());
-      document.getElementById('sidebarClose').addEventListener('click', () => this.close());
-      this.overlay.addEventListener('click', () => this.close());
-    }
-  };
-
-  function initHeaderScroll() {
-    const header = document.getElementById('header');
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(() => { header.classList.toggle('scrolled', window.scrollY > 40); ticking = false; });
-        ticking = true;
-      }
-    }, { passive: true });
-  }
-
-  // ==================== APP INIT ====================
-  async function initApp() {
-    initHeaderScroll();
-    MobileNav.init();
-    renderTabs();
-    await loadSchedule(currentDay);
-  }
-
-  if (!window.__appInitialized) {
-    window.__appInitialized = true;
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-      initApp();
-    }
-  }
-})();
+/* ===== INIT ===== */
+loadSchedule();
 </script>
 </body>
 </html>
