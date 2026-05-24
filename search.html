@@ -244,9 +244,8 @@ const CACHE={};
 let currentPage=1;
 let isLoading=false;
 let hasMore=true;
-let currentQuery='';
 let selectedGenres=[];
-const params=new URLSearchParams(location.search);
+const urlParams=new URLSearchParams(location.search);
 
 async function apiFetch(url,retries=3){
   if(CACHE[url]&&Date.now()-CACHE[url].t<300000)return CACHE[url].d;
@@ -260,7 +259,7 @@ async function apiFetch(url,retries=3){
   }
 }
 
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function showToast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
 function makeCard(a){
   const title=a.title||'Unknown';
@@ -277,54 +276,84 @@ function makeCard(a){
   </a>`;
 }
 
-function buildURL(page=1){
-  const q=document.getElementById('mainSearchInput')?.value.trim()||currentQuery;
+/* ===== CORE SEARCH/FILTER FUNCTION ===== */
+/* Jikan API: /anime endpoint supports q, type, status, order_by, rating, genres, page */
+function buildSearchURL(page){
+  const q=(document.getElementById('mainSearchInput')?.value||'').trim();
   const type=document.getElementById('filterType')?.value||'';
-  const status=document.getElementById('filterStatus')?.value||params.get('status')||'';
-  const sort=document.getElementById('filterSort')?.value||params.get('sort')||'bypopularity';
+  const status=document.getElementById('filterStatus')?.value||'';
+  const sortVal=document.getElementById('filterSort')?.value||'bypopularity';
   const rating=document.getElementById('filterRating')?.value||'';
-  let url=`${API}/anime?page=${page}&limit=24&sfw=true`;
+
+  // Map sort values to Jikan order_by param
+  const sortMap={bypopularity:'members',score:'score',rank:'rank',title:'title',start_date:'start_date'};
+  const orderBy=sortMap[sortVal]||'members';
+
+  let url=`${API}/anime?page=${page}&limit=24&sfw=true&order_by=${orderBy}&sort=desc`;
   if(q)url+=`&q=${encodeURIComponent(q)}`;
   if(type)url+=`&type=${type}`;
   if(status)url+=`&status=${status}`;
-  if(sort)url+=`&order_by=${sort}`;
   if(rating)url+=`&rating=${rating}`;
   if(selectedGenres.length)url+=`&genres=${selectedGenres.join(',')}`;
   return url;
 }
 
-async function doSearch(append=false){
+async function runSearch(append=false){
   if(isLoading)return;
   isLoading=true;
   const btn=document.getElementById('loadMoreBtn');
+  const grid=document.getElementById('resultsGrid');
+  const count=document.getElementById('resultCount');
   if(btn)btn.disabled=true;
+
   if(!append){
     currentPage=1;
-    document.getElementById('resultsGrid').innerHTML=Array.from({length:12},()=>`<div class="anime-card"><div class="skeleton" style="width:100%;aspect-ratio:2/3"></div><div style="padding:8px"><div class="skeleton" style="width:80%;height:12px;margin-bottom:6px"></div><div class="skeleton" style="width:50%;height:10px"></div></div></div>`).join('');
+    if(grid)grid.innerHTML=Array.from({length:12},()=>`
+      <div class="anime-card">
+        <div class="skeleton" style="width:100%;aspect-ratio:2/3"></div>
+        <div style="padding:8px">
+          <div class="skeleton" style="width:80%;height:12px;margin-bottom:6px"></div>
+          <div class="skeleton" style="width:50%;height:10px"></div>
+        </div>
+      </div>`).join('');
   }
+
   try{
-    const d=await apiFetch(buildURL(currentPage));
+    const url=buildSearchURL(currentPage);
+    const d=await apiFetch(url);
     const list=d.data||[];
     hasMore=d.pagination?.has_next_page||false;
-    const grid=document.getElementById('resultsGrid');
-    const count=document.getElementById('resultCount');
-    if(!append)grid.innerHTML='';
+    const total=d.pagination?.items?.total||list.length;
+
+    if(!append&&grid)grid.innerHTML='';
+
     if(!list.length&&!append){
-      grid.innerHTML=`<div class="no-results" style="grid-column:1/-1"><div class="icon">🔍</div><h3>No Results Found</h3><p>Try different keywords or filters</p></div>`;
+      if(grid)grid.innerHTML=`<div class="no-results" style="grid-column:1/-1">
+        <div class="icon">🔍</div>
+        <h3>No Results Found</h3>
+        <p>Try different keywords or adjust your filters</p>
+      </div>`;
+      if(count)count.textContent='0';
     }else{
-      grid.insertAdjacentHTML('beforeend',list.map(makeCard).join(''));
+      if(grid)grid.insertAdjacentHTML('beforeend',list.map(makeCard).join(''));
+      if(count)count.textContent=total>999?`${(total/1000).toFixed(1)}k+`:total;
     }
-    if(count){const total=d.pagination?.items?.total||list.length;count.textContent=total>24?`${total}+`:total;}
+
     if(btn){btn.disabled=false;btn.style.display=hasMore?'block':'none';}
   }catch(e){
-    if(!append)document.getElementById('resultsGrid').innerHTML=`<div class="no-results" style="grid-column:1/-1"><div class="icon">⚠️</div><h3>Failed to Load</h3><p>${e.message}</p><button onclick="doSearch()" style="margin-top:16px;background:var(--accent);color:#fff;border:none;padding:10px 20px;border-radius:20px;cursor:pointer;font-family:inherit">Retry</button></div>`;
+    if(!append&&grid)grid.innerHTML=`<div class="no-results" style="grid-column:1/-1">
+      <div class="icon">⚠️</div>
+      <h3>Failed to Load</h3>
+      <p>${e.message}</p>
+      <button onclick="runSearch()" style="margin-top:16px;background:var(--accent);color:#fff;border:none;padding:10px 20px;border-radius:20px;cursor:pointer;font-family:inherit;font-weight:700">Retry</button>
+    </div>`;
     if(btn)btn.disabled=false;
   }
   isLoading=false;
 }
 
-function loadMore(){currentPage++;doSearch(true);}
-function applyFilters(){currentPage=1;doSearch();}
+function loadMore(){currentPage++;runSearch(true);}
+function applyFilters(){currentPage=1;runSearch();}
 function clearFilters(){
   document.getElementById('filterType').value='';
   document.getElementById('filterStatus').value='';
@@ -332,19 +361,7 @@ function clearFilters(){
   document.getElementById('filterRating').value='';
   selectedGenres=[];
   document.querySelectorAll('.filter-tag').forEach(t=>t.classList.remove('active'));
-  doSearch();
-}
-
-// Load genres
-async function loadGenres(){
-  try{
-    const d=await apiFetch(`${API}/genres/anime`);
-    const genres=(d.data||[]).slice(0,20);
-    const tagsEl=document.getElementById('genreTags');
-    if(tagsEl){
-      tagsEl.innerHTML=genres.map(g=>`<span class="filter-tag" data-id="${g.mal_id}" onclick="toggleGenre(this,${g.mal_id})">${g.name}</span>`).join('');
-    }
-  }catch(e){const tagsEl=document.getElementById('genreTags');if(tagsEl)tagsEl.innerHTML='<span style="color:var(--text3);font-size:12px">Genres unavailable</span>';}
+  runSearch();
 }
 
 function toggleGenre(el,id){
@@ -353,15 +370,39 @@ function toggleGenre(el,id){
   else{selectedGenres=selectedGenres.filter(g=>g!==id);}
 }
 
-// Search input
-let searchTimer=null;
-document.getElementById('mainSearchInput')?.addEventListener('input',e=>{
-  clearTimeout(searchTimer);searchTimer=setTimeout(()=>doSearch(),500);
+// Load genres from Jikan
+async function loadGenres(){
+  try{
+    const d=await apiFetch(`${API}/genres/anime`);
+    const genres=(d.data||[]).slice(0,24);
+    const tagsEl=document.getElementById('genreTags');
+    if(tagsEl){
+      tagsEl.innerHTML=genres.map(g=>`<span class="filter-tag" data-id="${g.mal_id}" onclick="toggleGenre(this,${g.mal_id})">${g.name}</span>`).join('');
+    }
+  }catch(e){
+    const tagsEl=document.getElementById('genreTags');
+    if(tagsEl)tagsEl.innerHTML='<span style="color:var(--text3);font-size:12px">Genres unavailable</span>';
+  }
+}
+
+// Debounced search input
+let srchDebounce=null;
+document.getElementById('mainSearchInput')?.addEventListener('input',()=>{
+  clearTimeout(srchDebounce);
+  srchDebounce=setTimeout(()=>{currentPage=1;runSearch();},500);
 });
 document.getElementById('mainSearchInput')?.addEventListener('keydown',e=>{
-  if(e.key==='Enter')doSearch();
+  if(e.key==='Enter'){clearTimeout(srchDebounce);currentPage=1;runSearch();}
 });
-document.getElementById('mainSearchBtn')?.addEventListener('click',doSearch);
+document.getElementById('mainSearchBtn')?.addEventListener('click',()=>{clearTimeout(srchDebounce);currentPage=1;runSearch();});
+
+// Load more button + infinite scroll
+document.getElementById('loadMoreBtn')?.addEventListener('click',loadMore);
+const ioObserver=new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting&&hasMore&&!isLoading)loadMore();
+},{threshold:0.3});
+const loadBtn=document.getElementById('loadMoreBtn');
+if(loadBtn)ioObserver.observe(loadBtn);
 
 // Sidebar
 const sidebar=document.getElementById('sidebar');
@@ -372,26 +413,34 @@ document.getElementById('menuBtn')?.addEventListener('click',openSide);
 document.getElementById('sideClose')?.addEventListener('click',closeSide);
 sideOverlay?.addEventListener('click',closeSide);
 
-// Header search btn (dummy on this page - just focus the main input)
-document.getElementById('searchBtn')?.addEventListener('click',()=>{document.getElementById('mainSearchInput')?.focus();});
+// Header search btn just focuses the main input on this page
+document.getElementById('searchBtn')?.addEventListener('click',()=>{
+  document.getElementById('mainSearchInput')?.focus();
+  document.getElementById('mainSearchInput')?.scrollIntoView({behavior:'smooth'});
+});
 
-// Init from URL params
-const urlQ=params.get('q');
-const urlStatus=params.get('status');
-const urlSort=params.get('sort');
-if(urlQ){document.getElementById('mainSearchInput').value=urlQ;currentQuery=urlQ;}
-if(urlStatus){document.getElementById('filterStatus').value=urlStatus;}
-if(urlSort){document.getElementById('filterSort').value=urlSort;}
+// Apply URL params on load
+const urlQ=urlParams.get('q');
+const urlStatus=urlParams.get('status');
+const urlSort=urlParams.get('sort');
+if(urlQ){
+  const inp=document.getElementById('mainSearchInput');
+  if(inp)inp.value=urlQ;
+}
+if(urlStatus){
+  const sel=document.getElementById('filterStatus');
+  if(sel)sel.value=urlStatus;
+}
+if(urlSort){
+  const sel=document.getElementById('filterSort');
+  // Map incoming sort param to our select values
+  const sortRemap={byrank:'rank',bypopularity:'bypopularity',score:'score'};
+  if(sel)sel.value=sortRemap[urlSort]||urlSort;
+}
 
-// Infinite scroll
-const observer=new IntersectionObserver(entries=>{
-  if(entries[0].isIntersecting&&hasMore&&!isLoading)loadMore();
-},{threshold:0.5});
-const loadBtn=document.getElementById('loadMoreBtn');
-if(loadBtn)observer.observe(loadBtn);
-
+// Boot
 loadGenres();
-doSearch();
+runSearch();
 </script>
 </body>
 </html>
